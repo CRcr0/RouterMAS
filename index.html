@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RouterMAS — Value-Preserving Watermarking for Multi-Agent Routing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E%E2%9A%96%3C/text%3E%3C/svg%3E">
+<meta name="description" content="RouterMAS: a value-preserving watermark for multi-agent routing. A secret key moves routing probability only inside the freedom left after continuation utility and cost are fixed, and the same marked law yields a sequential likelihood-ratio verifier.">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --ring:rgba(11,11,11,.10);
+  --accent:#2a78d6; --accent-deep:#1c5cab; --accent-wash:rgba(42,120,214,.10);
+  --warm:#eb6834; --aqua:#1baf7a; --good:#006300; --ref:#b9b7ae;
+  --sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:16.5px;overflow-x:hidden}
+a{color:var(--accent-deep)}
+.wrap{max-width:980px;margin:0 auto;padding:0 22px}
+.zh{display:none}
+body.lang-zh .zh{display:inline}
+body.lang-zh .en{display:none}
+body.lang-zh div.zh, body.lang-zh p.zh, body.lang-zh li.zh{display:block}
+
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(249,249,247,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--grid)}
+nav .wrap{display:flex;align-items:center;gap:18px;height:52px}
+nav .brand{font-weight:700;font-size:15px;letter-spacing:.2px;color:var(--ink);text-decoration:none;white-space:nowrap}
+nav .brand .fr{color:var(--accent)}
+nav .links{display:flex;gap:14px;margin-left:auto;align-items:center;flex-wrap:wrap}
+nav .links a{font-size:13.5px;color:var(--ink-2);text-decoration:none}
+nav .links a:hover{color:var(--accent-deep)}
+.langbtn{border:1px solid var(--baseline);background:var(--surface);border-radius:14px;padding:2px 11px;font-size:12.5px;cursor:pointer;color:var(--ink-2);font-family:inherit}
+.langbtn:hover{border-color:var(--accent);color:var(--accent-deep)}
+@media (max-width:720px){nav .links a.opt{display:none}}
+
+/* hero */
+header{padding:54px 0 8px;text-align:center}
+h1{font-size:clamp(26px,4.6vw,40px);line-height:1.22;margin:20px auto 10px;max-width:900px;font-weight:800;letter-spacing:-.01em}
+h1 .accent{color:var(--accent)}
+.tagline{max-width:780px;margin:0 auto;color:var(--ink-2);font-size:clamp(15.5px,2vw,18px)}
+.authors{margin:14px 0 4px;color:var(--ink-2);font-size:14.5px}
+.authors .sep{color:var(--baseline);margin:0 6px}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:26px 0 6px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:22px;padding:9px 20px;font-size:14.5px;text-decoration:none;border:1px solid var(--ink);color:var(--ink);background:var(--surface);transition:transform .12s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.primary:hover{background:#222}
+.btn .ic{font-size:15px}
+
+/* hero canvas */
+.heroviz{margin:34px auto 0;max-width:920px;background:var(--surface);border:1px solid var(--grid);border-radius:14px;padding:10px 10px 4px;box-shadow:0 1px 3px rgba(11,11,11,.04)}
+.heroviz canvas{width:100%;height:auto;display:block;border-radius:8px}
+.heroviz .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 10px 8px}
+
+/* sections */
+section{padding:54px 0 6px}
+.kicker{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-deep);font-weight:700;margin-bottom:6px}
+h2{font-size:clamp(21px,3vw,27px);margin:0 0 14px;letter-spacing:-.01em}
+.lead{color:var(--ink-2);max-width:820px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:14px;margin-top:22px}
+.card{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:18px 18px 14px;position:relative}
+.card .no{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.card h3{margin:6px 0 8px;font-size:16.5px}
+.card p{margin:0;font-size:14px;color:var(--ink-2)}
+.card.bad h3::after{content:" ✗";color:var(--warm)}
+.card.ours{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.card.ours h3{color:var(--accent-deep)}
+.qbox{margin-top:22px;border-left:3px solid var(--accent);background:var(--accent-wash);border-radius:0 10px 10px 0;padding:16px 20px;font-size:17px}
+.qbox b{color:var(--accent-deep)}
+
+/* method steps */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:14px;margin-top:22px}
+.step{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:18px}
+.step .badge{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:10px}
+.step h3{margin:0 0 8px;font-size:16px}
+.step p{margin:0;font-size:14px;color:var(--ink-2)}
+.step .tag{display:inline-block;margin-top:10px;font-size:12px;color:var(--accent-deep);background:var(--accent-wash);border-radius:10px;padding:2px 10px}
+.formulas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;margin-top:26px}
+.formula{min-width:0;overflow-x:auto;text-align:center;background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:18px 16px}
+.formula .math{font-size:19px;font-family:Georgia,"Times New Roman",serif;font-style:italic;line-height:1.5}
+.formula .math .up{font-style:normal}
+.formula .math sub,.formula .math sup{font-size:12px}
+.formula .note{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* lab */
+.lab{margin-top:26px;background:var(--surface);border:1px solid var(--grid);border-radius:14px;padding:14px 16px 10px;box-shadow:0 1px 3px rgba(11,11,11,.04)}
+.lab .labhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 0 10px}
+.lab .labbadge{background:var(--accent);color:#fff;font-weight:700;font-size:12.5px;border-radius:12px;padding:3px 12px}
+.lab .labtitle{font-size:14.5px;color:var(--ink-2);flex:1;min-width:240px}
+.labbtn{border:1px solid var(--baseline);background:var(--surface);border-radius:15px;padding:3px 12px;font-size:13px;cursor:pointer;color:var(--ink-2);font-family:inherit}
+.labbtn:hover{border-color:var(--accent);color:var(--accent-deep)}
+.labbtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.controls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:8px 0 12px;border-top:1px solid var(--grid);border-bottom:1px solid var(--grid);font-size:13.5px;color:var(--ink-2)}
+.controls .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.controls .grp>.lbl{font-weight:600;color:var(--ink)}
+.controls input[type=range]{accent-color:var(--accent);width:120px}
+.controls output{font-family:var(--mono);font-size:12.5px;min-width:30px;display:inline-block}
+.controls label{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.controls input[type=checkbox]{accent-color:var(--accent)}
+.labgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:12px}
+@media (max-width:820px){.labgrid{grid-template-columns:1fr}}
+.panel h4{margin:0 0 4px;font-size:13.5px;color:var(--ink)}
+.panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(118px,100%),1fr));gap:8px;margin-top:10px}
+.ro{border:1px solid var(--grid);border-radius:10px;padding:7px 10px;background:var(--page)}
+.ro .k{font-size:11.5px;color:var(--ink-2)}
+.ro .v{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.status{margin-top:10px;font-size:13px;border-radius:10px;padding:8px 12px;background:var(--accent-wash);color:var(--accent-deep)}
+.status.warn{background:rgba(235,104,52,.10);color:#9a3d14}
+.status.idle{background:#f0efec;color:var(--ink-2)}
+.lab .cap{font-size:12.5px;color:var(--muted);padding:10px 2px 4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:2px 0 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.line{height:2px;width:14px;border-radius:1px;vertical-align:3px}
+svg text{font-family:var(--sans)}
+
+/* stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px;margin-top:24px}
+.tile{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:16px 18px 14px}
+.tile .label{font-size:13px;color:var(--ink-2)}
+.tile .value{font-size:26px;font-weight:650;letter-spacing:-.01em;margin:2px 0;font-variant-numeric:tabular-nums}
+.tile .value .from{font-size:16px;font-weight:400;color:var(--muted)}
+.tile .delta{font-size:13px;color:var(--good);font-weight:600}
+.tile .delta.neutral{color:var(--ink-2)}
+.tile .basis{font-size:12px;color:var(--muted);margin-top:2px}
+.tiles-note{font-size:13px;color:var(--muted);margin-top:12px}
+
+/* figure rows */
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px;margin-top:24px}
+.figrow figure{margin:0;background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:12px 12px 8px}
+.figrow img{width:100%;height:auto;display:block;border-radius:6px}
+.figrow figcaption{font-size:12.5px;color:var(--muted);padding:8px 2px 4px;text-align:center}
+.fignote{font-size:13px;color:var(--muted);margin-top:10px}
+.bigfig{margin:24px 0 0;background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:12px}
+.bigfig img{width:100%;height:auto;display:block}
+.bigfig figcaption{font-size:12.5px;color:var(--muted);padding:8px 4px 2px;text-align:center}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:720px){.pair{grid-template-columns:1fr}}
+.pair figure{margin:0;background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:12px}
+.pair img{width:100%;display:block}
+.pair figcaption{font-size:12.5px;color:var(--muted);padding:8px 2px 2px;text-align:center}
+
+/* worked examples */
+.casegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(330px,100%),1fr));gap:16px;margin-top:22px}
+.case{background:var(--surface);border:1px solid var(--grid);border-radius:14px;padding:18px 18px 12px}
+.case>h3{margin:0 0 4px;font-size:16px}
+.case .src{font-size:13px;color:var(--ink-2);margin:4px 0 8px}
+.tw{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.case code{font-family:var(--mono);font-size:12px;background:var(--page);border-radius:6px;padding:1px 6px}
+.chip{display:inline-block;border-radius:10px;padding:1px 9px;font-size:11.5px;font-weight:600;vertical-align:middle}
+.chip.win{background:#e7f4ea;color:#2c662d}
+.chip.tie{background:#f4ecd9;color:#8a6d1f}
+.chip.off{background:#f0efec;color:var(--ink-2)}
+table.mini{width:100%;min-width:320px;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;margin:6px 0 4px}
+table.mini th{font-weight:600;color:var(--ink-2);text-align:right;padding:4px 6px;border-bottom:1px solid var(--grid);font-size:11.5px}
+table.mini th:first-child,table.mini td:first-child{text-align:left}
+table.mini td{text-align:right;padding:3px 6px;border-bottom:1px solid #efeee9}
+table.mini tr.sum td{border-top:1px solid var(--baseline);font-weight:600;color:var(--ink)}
+.pos{color:#1c5cab}.neg{color:#9a3d14}
+.checks{font-size:13px;line-height:1.75;margin:8px 0 4px}
+.checks b{font-weight:650}
+.why{font-size:12.5px;color:var(--ink-2);margin:4px 0 8px}
+
+/* evidence */
+.evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px;margin-top:22px}
+.ev{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:18px;text-decoration:none;color:var(--ink);display:block;transition:border-color .15s ease, transform .12s ease}
+.ev:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ev canvas{width:100%;height:86px;display:block;border-radius:8px;background:var(--accent-wash);margin-bottom:12px}
+.ev h3{margin:0 0 6px;font-size:15.5px}
+.ev p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.ev .go{margin-top:10px;font-size:13px;color:var(--accent-deep);font-weight:600}
+
+/* doors */
+.doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px;margin-top:22px}
+.door{border-radius:14px;padding:26px 24px;text-decoration:none;display:block;border:1px solid var(--grid);transition:transform .12s ease, box-shadow .12s ease}
+.door:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(11,11,11,.08)}
+.door.dark{background:#14161d;color:#eef0f6;border-color:#14161d}
+.door.dark .meta{color:#9aa3b8}
+.door.light{background:var(--surface);color:var(--ink)}
+.door.light .meta{color:var(--muted)}
+.door h3{margin:0 0 8px;font-size:18px}
+.door p{margin:0 0 12px;font-size:14px;opacity:.9}
+.door .meta{font-size:12.5px}
+.door .arrow{float:right;font-size:20px}
+
+pre.bib{background:#14161d;color:#dfe4f0;border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:12.8px;overflow-x:auto;line-height:1.55}
+footer{margin-top:64px;border-top:1px solid var(--grid);padding:26px 0 40px;font-size:13px;color:var(--muted);text-align:center}
+footer a{color:var(--ink-2)}
+
+/* tooltip */
+.tip{position:fixed;z-index:99;pointer-events:none;background:#14161d;color:#eef0f6;font-size:12px;line-height:1.45;border-radius:8px;padding:7px 10px;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:0;transition:opacity .08s;max-width:260px;font-variant-numeric:tabular-nums}
+.tip b{color:#fff}
+</style>
+</head>
+<body>
+<div class="tip" id="tip"></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">Router<span class="fr">MAS</span> <span style="font-weight:400;color:var(--muted)">⚖</span></a>
+    <div class="links">
+      <a class="opt" href="#method"><span class="en">Method</span><span class="zh">方法</span></a>
+      <a class="opt" href="#results"><span class="en">Results</span><span class="zh">结果</span></a>
+      <a class="opt" href="#examples"><span class="en">Examples</span><span class="zh">示例</span></a>
+      <a class="opt" href="#evidence"><span class="en">Evidence</span><span class="zh">证据</span></a>
+      <a class="opt" href="#explore"><span class="en">Deep dive</span><span class="zh">深入</span></a>
+      <a class="opt" href="#bibtex">BibTeX</a>
+      <button class="langbtn" id="langBtn" type="button" aria-label="Switch language">中文</button>
+    </div>
+  </div>
+</nav>
+
+<header id="top" class="wrap">
+  <h1>RouterMAS<span class="accent">:</span>
+    <span class="en">watermarking a multi-agent router inside the freedom its <span class="accent">task values leave&nbsp;open</span></span>
+    <span class="zh">把水印写进多智能体路由器中<span class="accent">任务价值没有锁定的自由度</span></span>
+  </h1>
+  <p class="tagline">
+    <span class="en">Fixing what a system must achieve does not fix how it delegates. Bellman recursion turns prefix-wise preservation of task utility and agent-call cost into local conservation equations; a secret key moves routing probability only inside the space they leave open, and the same marked law yields a sequential likelihood-ratio verifier. No agent is retrained. No route is forced.</span>
+    <span class="zh">锁定系统必须达成的价值，并不等于锁定它如何委派任务。Bellman 递推把"每个执行前缀上的任务效用与调用成本都保持不变"化为局部守恒方程；密钥只在这些方程留出的空间里移动路由概率，而同一个带水印的路由法则直接给出序贯似然比验证器。不重训任何 agent，不强制任何路径。</span>
+  </p>
+  <p class="authors"><strong>Google<span class="sep">·</span>xAI<span class="sep">·</span><span class="en">Cornell University</span><span class="zh">康奈尔大学</span><span class="sep">·</span><span class="en">Columbia University</span><span class="zh">哥伦比亚大学</span></strong></p>
+  <div class="btns">
+    <a class="btn primary" href="RouterMAS_Story.html"><span class="ic">📖</span> <span class="en">Interactive story</span><span class="zh">交互式讲解</span></a>
+    <a class="btn primary" href="showcase.html"><span class="ic">🔬</span> <span class="en">Case studies</span><span class="zh">案例研究</span></a>
+    <a class="btn" href="RouterMAS_Poster.pdf"><span class="ic">🧾</span> <span class="en">Poster</span><span class="zh">海报</span></a>
+    <a class="btn" href="RouterMAS_Extended_Abstract.pdf"><span class="ic">📄</span> <span class="en">Extended Abstract (Proposal)</span><span class="zh">扩展摘要（研究提案）</span></a>
+  </div>
+
+  <div class="heroviz">
+    <canvas id="hero" width="1760" height="480" aria-label="Animated overview: a router splits work across four delegates; the key moves probability between them while utility and cost stay fixed, and the sampled delegations accumulate watermark evidence"></canvas>
+    <div class="cap">
+      <span class="en">A task reaches the router, which splits work across four delegates. The key moves probability <i>between</i> them (p → q<sub>K</sub>) while expected utility and cost stay fixed, and every sampled delegation adds log q<sub>K</sub>/p to the evidence. The probabilities shown are the four-action example from the paper: utility 0.70 and cost 1.50 before and after.</span>
+      <span class="zh">任务到达路由器，路由器把工作分给四个 agent。密钥只在它们<i>之间</i>挪动概率（p → q<sub>K</sub>），期望效用与成本保持不变；每一次被采样的委派都向证据累加 log q<sub>K</sub>/p。图中概率取自论文的四动作构造示例：效用前后均为 0.70，成本均为 1.50。</span>
+    </div>
+  </div>
+</header>
+
+<section class="wrap" id="problem">
+  <div class="kicker"><span class="en">The problem</span><span class="zh">问题</span></div>
+  <h2><span class="en">Carrier-first marks pay for it downstream</span><span class="zh">先选载体的水印，代价落在后续执行上</span></h2>
+  <p class="lead">
+    <span class="en">Two systems built from the same models can embody different orchestration policies, so the router is an asset worth attributing. But a delegation is also a functional decision: it changes the history on which every later choice, retry and cost depends. Transferring existing carriers to a multi-agent router assumes a secret preference can be fixed <i>before</i> asking whether the task values permit it:</span>
+    <span class="zh">同一组模型可以组成编排策略完全不同的系统，因此路由器本身就是值得溯源的资产。但一次委派同时也是功能性决策：它改变了之后所有选择、重试与成本所依赖的历史。把现有水印载体直接搬到多智能体路由器上，隐含的假设是：可以<i>先</i>固定一个秘密偏好，再去问任务价值是否允许它：</span>
+  </p>
+  <div class="cards">
+    <div class="card bad">
+      <span class="no">① <span class="en">Red/green delegation bias</span><span class="zh">红/绿委派偏置</span></span>
+      <h3><span class="en">Blind to the future</span><span class="zh">看不到未来</span></h3>
+      <p><span class="en">Tilting delegations toward a keyed set ignores what each delegation enables later, so continuation utility and cost drift.</span><span class="zh">把委派往密钥集合倾斜，却不看每次委派之后会引出什么，后续效用与成本随之漂移。</span></p>
+    </div>
+    <div class="card bad">
+      <span class="no">② <span class="en">Behavioral marks</span><span class="zh">行为水印</span></span>
+      <h3><span class="en">Averages hide prefixes</span><span class="zh">平均值掩盖前缀</span></h3>
+      <p><span class="en">Preserving aggregate utility lets gains on easy prefixes pay for losses on hard ones; prefix-wise continuation values are not part of the contract.</span><span class="zh">只保持总体效用，简单前缀上的收益可以抵消困难前缀上的损失；逐前缀的后续价值不在约束之内。</span></p>
+    </div>
+    <div class="card bad">
+      <span class="no">③ <span class="en">Forced secret paths</span><span class="zh">强制秘密路径</span></span>
+      <h3><span class="en">Identifiable for the wrong reason</span><span class="zh">可识别，但原因不对</span></h3>
+      <p><span class="en">A fixed route through agents or experts is detectable precisely because it sends work where the original system would not.</span><span class="zh">穿过 agent 或专家的固定路线之所以能被检测，恰恰是因为它把工作派到了原系统不会去的地方。</span></p>
+    </div>
+    <div class="card ours">
+      <span class="no">— RouterMAS</span>
+      <h3><span class="en">Constraints first, then the key</span><span class="zh">先求约束，再放密钥</span></h3>
+      <p><span class="en">Derive the admissible routing changes from continuation values, encode the key only there, and return the original router when none remain.</span><span class="zh">先由后续价值推出可行的路由变化，只在其中编码密钥；没有可用方向时原样返回路由器。</span></p>
+    </div>
+  </div>
+  <div class="qbox">
+    <span class="en"><b>Core question.</b> Which multi-agent routing variations preserve the continuation values a deployment must keep, and how can they carry a verifiable signature with controlled intervention and estimation cost?</span>
+    <span class="zh"><b>核心问题：</b>哪些多智能体路由变化能保持部署必须守住的后续价值？它们又如何在可控的干预与估计代价下携带可验证的签名？</span>
+  </div>
+  <figure class="bigfig">
+    <img src="fig_overview.png" alt="Overview figure with four panels. Prior work: AgentMark marks an agent's action distribution with a key; PathMark marks triggered expert paths. MAS routing: a user task goes to RouterMAS, which delegates to Planner, Coder, Tool and Reviewer and produces a route trace. Embed: inside a region of probability laws, the reference law p moves to q_K inside the feasible band, avoiding the invalid region, with Delta V = 0. Verify: traces 1 to N accumulate watermark evidence L_T." loading="lazy">
+    <figcaption><span class="en">RouterMAS and prior carriers. Behavioral marks act on an agent's actions and path marks on triggered expert routes; RouterMAS acts on the system-level routing policy, moving p to q<sub>K</sub> inside the continuation-value-preserving region, and delegation traces accumulate likelihood-ratio evidence L<sub>T</sub>.</span><span class="zh">RouterMAS 与已有载体。行为水印作用于 agent 的动作，路径水印作用于触发的专家路线；RouterMAS 作用于系统级路由策略，在保持后续价值的区域内把 p 移到 q<sub>K</sub>，委派轨迹累积似然比证据 L<sub>T</sub>。</span></figcaption>
+  </figure>
+</section>
+
+<section class="wrap" id="method">
+  <div class="kicker"><span class="en">Method</span><span class="zh">方法</span></div>
+  <h2><span class="en">Find the freedom, move minimally, verify with the same law</span><span class="zh">找到自由度，最小改动，用同一法则验证</span></h2>
+  <p class="lead">
+    <span class="en">Constituent agents, tools and the executor stay frozen. At each history h the router has a legal delegation set and a reference law p<sub>h</sub>; for each protected return j (task success, remaining agent-call cost) Q<sub>j</sub><sup>p</sup>(h,a) is the expected return after delegating to a and then following p. The contract is V<sub>j</sub><sup>q</sup>(h) = V<sub>j</sub><sup>p</sup>(h) at every admissible prefix.</span>
+    <span class="zh">各 agent、工具与执行器全部冻结。在每个历史 h，路由器有合法委派集合与参考法则 p<sub>h</sub>；对每个受保护回报 j（任务成功、剩余调用成本），Q<sub>j</sub><sup>p</sup>(h,a) 表示先委派给 a、此后沿用 p 的期望回报。约束是：在每个可行前缀上 V<sub>j</sub><sup>q</sup>(h) = V<sub>j</sub><sup>p</sup>(h)。</span>
+  </p>
+  <div class="steps">
+    <div class="step">
+      <span class="badge">1</span>
+      <h3><span class="en">Continuation conservation</span><span class="zh">后续价值守恒</span></h3>
+      <p><span class="en">Audit every legal delegation by complete counterfactual continuations under the unchanged reference router. Prefix-wise preservation holds <b>iff</b> (q<sub>h</sub>−p<sub>h</sub>)<sup>⊤</sup>Q<sub>j</sub><sup>p</sup>(h)=0 at every history, leaving a local family of dimension |𝒜<sub>h</sub>| − rank B<sub>h</sub>.</span><span class="zh">在参考路由器不变的前提下，用完整的反事实后续执行审计每个合法委派。逐前缀保持成立<b>当且仅当</b>每个历史上 (q<sub>h</sub>−p<sub>h</sub>)<sup>⊤</sup>Q<sub>j</sub><sup>p</sup>(h)=0，剩下维数为 |𝒜<sub>h</sub>| − rank B<sub>h</sub> 的局部可行族。</span></p>
+      <span class="tag"><span class="en">where the freedom is</span><span class="zh">自由度在哪里</span></span>
+    </div>
+    <div class="step">
+      <span class="badge">2</span>
+      <h3><span class="en">Least-change keyed encoding</span><span class="zh">最小改动的密钥编码</span></h3>
+      <p><span class="en">Inside that family, pick the law with the smallest relative entropy to p for its key-score gain: an information projection whose solution is an exponential tilt. Estimation and solver errors are charged to a local budget and shrink the update toward p.</span><span class="zh">在可行族内，选出达到同样密钥得分增益、且与 p 相对熵最小的法则：这是信息投影，解为指数倾斜。估计误差与求解误差计入局部预算，把更新向 p 收缩。</span></p>
+      <span class="tag"><span class="en">how far to move</span><span class="zh">挪动多少</span></span>
+    </div>
+    <div class="step">
+      <span class="badge">3</span>
+      <h3><span class="en">Sequential verification</span><span class="zh">序贯验证</span></h3>
+      <p><span class="en">A verifier rebuilds p and q<sub>K</sub> from frozen snapshots and sums log q<sub>K</sub>(a)/p(a) over observed delegations. Under the reference null this is a nonnegative martingale, so Ville's inequality caps the false-positive rate at α for any stopping time.</span><span class="zh">验证者从冻结快照重建 p 与 q<sub>K</sub>，对观测到的委派累加 log q<sub>K</sub>(a)/p(a)。在参考零假设下这是非负鞅，由 Ville 不等式，任意停时下误报率都不超过 α。</span></p>
+      <span class="tag"><span class="en">how to prove it</span><span class="zh">如何证明</span></span>
+    </div>
+  </div>
+  <div class="formulas">
+    <div class="formula">
+      <div class="math">V<sub>j</sub><sup>q</sup>(h) = V<sub>j</sub><sup>p</sup>(h) &nbsp;<span class="up">∀h</span> &nbsp;⇔&nbsp; (q<sub>h</sub> − p<sub>h</sub>)<sup>⊤</sup>Q<sub>j</sub><sup>p</sup>(h) = 0 &nbsp;<span class="up">∀h</span></div>
+      <div class="note"><span class="en">Proposition 1 (prefix-wise conservation): backward induction gives sufficiency; equal successor values give necessity.</span><span class="zh">命题 1（逐前缀守恒）：反向归纳给出充分性，后继价值相等给出必要性。</span></div>
+    </div>
+    <div class="formula">
+      <div class="math">s<sub>K</sub><sup>⊤</sup>g = g<sup>⊤</sup>D<sup>−1</sup>g = ‖P D<sup>1/2</sup> s<sub>K</sub>‖<sup>2</sup></div>
+      <div class="note"><span class="en">Corollary 1: the same projected component sets the keyed gain (≈ η<sup>−1</sup>s<sub>K</sub><sup>⊤</sup>g) and the expected log evidence (≈ ½η<sup>−2</sup>s<sub>K</sub><sup>⊤</sup>g). Zero projection makes both inert.</span><span class="zh">推论 1：同一个投影分量同时决定密钥增益（≈ η<sup>−1</sup>s<sub>K</sub><sup>⊤</sup>g）与期望对数证据（≈ ½η<sup>−2</sup>s<sub>K</sub><sup>⊤</sup>g）。投影为零时两者都失效。</span></div>
+    </div>
+  </div>
+
+  <div class="lab" id="lab">
+    <div class="labhead">
+      <span class="labbadge"><span class="en">Routing lab</span><span class="zh">路由实验台</span></span>
+      <span class="labtitle"><span class="en">The encoder and verifier, live. Every number below is solved in your browser from the exponential-tilt dual and a Monte Carlo verifier.</span><span class="zh">编码器与验证器的实时演示。下方所有数字都由浏览器现场求解指数倾斜对偶问题、再用蒙特卡洛验证器算出。</span></span>
+      <button class="labbtn" id="labKey" type="button">🔑 <span class="en">New key</span><span class="zh">换密钥</span></button>
+    </div>
+    <div class="controls">
+      <div class="grp"><span class="lbl"><span class="en">Legal delegations</span><span class="zh">合法委派数</span></span><input type="range" id="labN" min="3" max="8" value="6" step="1" aria-label="Number of legal delegations"><output id="labNo">6</output></div>
+      <div class="grp"><span class="lbl"><span class="en">Protected</span><span class="zh">受保护</span></span><label><input type="checkbox" id="labU" checked> <span class="en">utility</span><span class="zh">效用</span></label><label><input type="checkbox" id="labC" checked> <span class="en">cost</span><span class="zh">成本</span></label></div>
+      <div class="grp"><span class="lbl"><span class="en">Constrain</span><span class="zh">约束对象</span></span><button class="labbtn on" id="labCont" type="button"><span class="en">continuation Q</span><span class="zh">后续价值 Q</span></button><button class="labbtn" id="labImm" type="button"><span class="en">immediate reward</span><span class="zh">即时奖励</span></button></div>
+      <div class="grp"><span class="lbl">η</span><input type="range" id="labEta" min="0" max="100" value="50" aria-label="KL weight eta"><output id="labEtao">1.50</output></div>
+    </div>
+    <div class="labgrid">
+      <div class="panel">
+        <h4><span class="en">Routing law at one history</span><span class="zh">某一历史上的路由法则</span></h4>
+        <div class="legend"><span><i style="background:var(--ref)"></i><span class="en">reference p</span><span class="zh">参考 p</span></span><span><i style="background:var(--accent)"></i><span class="en">marked q<sub>K</sub></span><span class="zh">带水印 q<sub>K</sub></span></span><span><i style="background:var(--warm)"></i><span class="en">key score s<sub>K</sub></span><span class="zh">密钥得分 s<sub>K</sub></span></span></div>
+        <svg id="labBars" viewBox="0 0 440 250" width="100%" role="img" aria-label="Bar chart of reference and marked routing probabilities per delegate"></svg>
+        <div class="readouts">
+          <div class="ro"><div class="k"><span class="en">feasible dimension</span><span class="zh">可行维数</span></div><div class="v" id="roDim">–</div></div>
+          <div class="ro"><div class="k">ΔV<sub>U</sub> <span class="en">(continuation)</span><span class="zh">（后续）</span></div><div class="v" id="roU">–</div></div>
+          <div class="ro"><div class="k">ΔV<sub>C</sub> <span class="en">(continuation)</span><span class="zh">（后续）</span></div><div class="v" id="roC">–</div></div>
+          <div class="ro"><div class="k">KL(q<sub>K</sub>‖p)</div><div class="v" id="roKL">–</div></div>
+          <div class="ro"><div class="k"><span class="en">key gain</span><span class="zh">密钥增益</span> s<sub>K</sub><sup>⊤</sup>(q−p)</div><div class="v" id="roG">–</div></div>
+        </div>
+        <div class="status" id="labStatus"></div>
+      </div>
+      <div class="panel">
+        <h4><span class="en">Verifier: log evidence over delegations</span><span class="zh">验证器：对数证据随委派累积</span></h4>
+        <p class="sub"><span class="en">16 traces sampled from q<sub>K</sub> and 16 from p at this history; detection rates use 400 traces of each.</span><span class="zh">在该历史上从 q<sub>K</sub> 与 p 各采样 16 条轨迹；检测率各用 400 条轨迹计算。</span></p>
+        <div class="legend"><span><i class="line" style="background:var(--accent)"></i><span class="en">marked traces</span><span class="zh">带水印轨迹</span></span><span><i class="line" style="background:var(--ref)"></i><span class="en">reference traces</span><span class="zh">参考轨迹</span></span></div>
+        <svg id="labEv" viewBox="0 0 380 250" width="100%" role="img" aria-label="Log-evidence traces for marked and reference routing with the detection threshold"></svg>
+        <div class="readouts">
+          <div class="ro"><div class="k"><span class="en">detected (marked)</span><span class="zh">检出（带水印）</span></div><div class="v" id="roTPR">–</div></div>
+          <div class="ro"><div class="k"><span class="en">false alarm (reference)</span><span class="zh">误报（参考）</span></div><div class="v" id="roFPR">–</div></div>
+          <div class="ro"><div class="k"><span class="en">median decisions</span><span class="zh">中位决策数</span></div><div class="v" id="roMed">–</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="cap">
+      <span class="en">A toy router with fixed delegate values: Q = immediate reward + continuation. With “immediate reward” selected the encoder conserves only the first step, and the continuation drift readouts show what it misses. Three delegations with two protected returns leave no freedom, so the router is returned unchanged. The verifier repeats one history for clarity (budget 300 delegations, α = 0.01); the finite-state results below use a four-step system with exact dynamics.</span>
+      <span class="zh">这是一个委派价值固定的玩具路由器：Q = 即时奖励 + 后续部分。选择“即时奖励”时，编码器只守恒第一步，后续漂移读数显示它遗漏了什么。三个委派加两个受保护回报时没有自由度，路由器原样返回。为便于观察，验证器重复同一个历史（预算 300 次委派，α = 0.01）；下方有限状态结果使用精确动力学的四步系统。</span>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="results">
+  <div class="kicker"><span class="en">Results · controlled finite-state system, exact dynamics</span><span class="zh">结果 · 精确动力学的受控有限状态系统</span></div>
+  <h2><span class="en">Routing moves, values do not, evidence accumulates</span><span class="zh">路由在变，价值不变，证据在累积</span></h2>
+  <p class="lead">
+    <span class="en">A multi-agent routing system with known transitions: four delegation steps, five states per step, six legal delegations, two protected returns, exact backward dynamic programming and η = 1.5. Known dynamics isolate the mechanism from estimation error.</span>
+    <span class="zh">一个转移已知的多智能体路由系统：四步委派、每步五个状态、六个合法委派、两个受保护回报，用精确反向动态规划求值，η = 1.5。已知动力学把机制本身与估计误差分开。</span>
+  </p>
+  <div class="tiles" id="tiles"></div>
+  <p class="tiles-note" id="tilesNote"></p>
+  <div class="figrow">
+    <figure>
+      <svg id="chDrift" viewBox="0 0 330 250" width="100%" role="img" aria-label="Maximum prefix value drift by routing law on a log scale"></svg>
+      <figcaption><span class="en">(a) Worst prefix value drift by routing law (log scale), lower is better</span><span class="zh">(a) 各路由法则的最坏前缀价值漂移（对数轴），越低越好</span></figcaption>
+    </figure>
+    <figure>
+      <svg id="chDet" viewBox="0 0 330 250" width="100%" role="img" aria-label="Detection rate versus number of audited decisions"></svg>
+      <figcaption><span class="en">(b) Sequential detection vs. audited decisions (10,000 trace groups per law)</span><span class="zh">(b) 序贯检测率随审计决策数变化（每种法则 10,000 组轨迹）</span></figcaption>
+    </figure>
+    <figure>
+      <svg id="chEta" viewBox="0 0 330 250" width="100%" role="img" aria-label="Normalized gain and information coefficients versus eta"></svg>
+      <figcaption><span class="en">(c) Measured ÷ predicted keyed gain and evidence vs. η, 20 prefixes</span><span class="zh">(c) 密钥增益与证据的实测/预测比随 η 变化，20 个前缀</span></figcaption>
+    </figure>
+  </div>
+  <p class="fignote">
+    <span class="en">All values come from re-executing the finite-state checks (seed 20260923; replay seed 20260925). Hover any mark for the exact number; the full tables are in the <a href="showcase.html">case studies</a>.</span>
+    <span class="zh">所有数值都来自重新执行的有限状态检查（种子 20260923；重放种子 20260925）。悬停任意数据点可查看精确数值；完整表格见<a href="showcase.html">案例研究</a>。</span>
+  </p>
+</section>
+
+<section class="wrap" id="examples">
+  <div class="kicker"><span class="en">Worked examples · from the case-study volume</span><span class="zh">完整示例 · 取自案例研究卷宗</span></div>
+  <h2><span class="en">One history with freedom, one without</span><span class="zh">一个有自由度的历史，一个没有</span></h2>
+  <p class="lead">
+    <span class="en">Six delegations at one history of the finite-state system, every probability and continuation value shown. The checks are computed, not asserted: the marked law conserves both protected values, while a law that matches only immediate rewards does not.</span>
+    <span class="zh">有限状态系统中某一历史上的六个委派，所有概率与后续价值全部列出。检查结果是计算出来的而非断言：带水印法则守住了两个受保护价值，只匹配即时奖励的法则则没有。</span>
+  </p>
+  <div class="casegrid" id="cases"></div>
+  <p class="fignote">
+    <span class="en">All twenty histories, the seven routing laws and the sequential-detection statistics live in the full <a href="showcase.html">case-study volume</a>.</span>
+    <span class="zh">全部二十个历史、七种路由法则与序贯检测统计见完整<a href="showcase.html">案例研究卷宗</a>。</span>
+  </p>
+</section>
+
+<section class="wrap" id="evidence">
+  <div class="kicker"><span class="en">Evidence</span><span class="zh">证据</span></div>
+  <h2><span class="en">See the carrier form, see the signature accumulate</span><span class="zh">看载体如何形成，看签名如何累积</span></h2>
+  <div class="evgrid">
+    <a class="ev" href="showcase.html#laws">
+      <canvas data-mini="laws" width="560" height="172"></canvas>
+      <h3><span class="en">Seven routing laws, one system</span><span class="zh">七种路由法则，同一系统</span></h3>
+      <p><span class="en">Unprojected bias, immediate-value matching, random feasible directions, inert controls and RouterMAS, compared on the same twenty histories.</span><span class="zh">未投影偏置、即时价值匹配、随机可行方向、失效对照与 RouterMAS，在同样的二十个历史上对比。</span></p>
+      <div class="go"><span class="en">Open the comparison →</span><span class="zh">打开对比 →</span></div>
+    </a>
+    <a class="ev" href="showcase.html#detection">
+      <canvas data-mini="traces" width="560" height="172"></canvas>
+      <h3><span class="en">Evidence traces</span><span class="zh">证据轨迹</span></h3>
+      <p><span class="en">Sampled log-evidence paths under the marked and reference laws, with the Ville threshold and empirical false-positive rates.</span><span class="zh">带水印与参考法则下采样的对数证据路径，附 Ville 阈值与经验误报率。</span></p>
+      <div class="go"><span class="en">Open the statistics →</span><span class="zh">打开统计 →</span></div>
+    </a>
+    <a class="ev" href="RouterMAS_Story.html#ch3">
+      <canvas data-mini="simplex" width="560" height="172"></canvas>
+      <h3><span class="en">Watch the carrier form</span><span class="zh">看载体如何形成</span></h3>
+      <p><span class="en">Chapter 03 of the interactive story draws the feasible family growing with delegations and shrinking with protected returns.</span><span class="zh">交互讲解第 03 章展示可行族如何随委派数增大、随受保护回报数缩小。</span></p>
+      <div class="go"><span class="en">Jump into chapter 03 →</span><span class="zh">进入第 03 章 →</span></div>
+    </a>
+  </div>
+  <div class="pair">
+    <figure>
+      <img src="fig_routing_structure.png" alt="Four-panel concept figure. More actions: a node with two legal branches gains several more blue branches. More constraints: some candidate directions get crossed out in red. Direction matters: a fan of arrows, some inside a permitted blue sector and some in a rejected red sector. Bottom: immediate matching leads to future drift with U and C changed; continuation constraints keep values, U and C equal." loading="lazy">
+      <figcaption><span class="en">Continuation-aware routing structure: more legal delegations expose freedom, more protected returns remove directions, and only continuation constraints keep future values.</span><span class="zh">考虑后续的路由结构：合法委派越多自由度越大，受保护回报越多方向越少，只有后续价值约束能守住未来价值。</span></figcaption>
+    </figure>
+    <figure>
+      <img src="fig_feasible_geometry.png" alt="Concept figure at one history. A router with four delegates A1 to A4; bar charts of p and q_K that mix the delegates differently with U(p)=U(q_K) and C(p)=C(q_K); a projection panel where p moves to q_K inside the feasible region while invalid directions are crossed out; a panel where the router is left unchanged." loading="lazy">
+      <figcaption><span class="en">Value-preserving routing at one history: p and q<sub>K</sub> mix the delegates differently with equal continuation utility and cost; histories without a usable direction keep the reference router.</span><span class="zh">单一历史上的价值守恒路由：p 与 q<sub>K</sub> 对各 agent 的混合比例不同，后续效用与成本相同；没有可用方向的历史保持参考路由器。</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap" id="explore">
+  <div class="kicker"><span class="en">Go deeper</span><span class="zh">深入阅读</span></div>
+  <h2><span class="en">Two layers below this page</span><span class="zh">这页之下还有两层</span></h2>
+  <div class="doors">
+    <a class="door dark" href="RouterMAS_Story.html">
+      <span class="arrow">↗</span>
+      <h3>📖 <span class="en">The Routing-Freedom Story</span><span class="zh">路由自由度的故事</span></h3>
+      <p><span class="en">An eight-chapter interactive walk from “the router is an asset” to the shared embedding–evidence geometry. Canvas-driven, bilingual, with a play button.</span><span class="zh">八章交互式讲解，从“路由器是资产”一路走到嵌入与证据共享的几何。Canvas 驱动，中英双语，带自动播放。</span></p>
+      <span class="meta"><span class="en">chapters 00–07 · ~12 min</span><span class="zh">章节 00–07 · 约 12 分钟</span></span>
+    </a>
+    <a class="door light" href="showcase.html">
+      <span class="arrow">↗</span>
+      <h3>🔬 <span class="en">Case Studies &amp; Statistics</span><span class="zh">案例研究与统计</span></h3>
+      <p><span class="en">The evidence volume: seven routing laws, annotated histories, the four-action witness, sequential detection, the embedding–evidence sweep and an estimated-value audit.</span><span class="zh">证据卷宗：七种路由法则、带注释的历史、四动作构造示例、序贯检测、嵌入–证据扫描，以及估计价值审计。</span></p>
+      <span class="meta"><span class="en">seven laws · twenty histories · four statistical checks</span><span class="zh">七种法则 · 二十个历史 · 四项统计检查</span></span>
+    </a>
+  </div>
+</section>
+
+<section class="wrap" id="bibtex">
+  <div class="kicker">BibTeX</div>
+  <h2><span class="en">Citation</span><span class="zh">引用</span></h2>
+  <pre class="bib">@misc{routermas2026,
+  title        = {RouterMAS: Value-Preserving Watermarking for Multi-Agent Routing},
+  author       = {{Google} and {xAI} and {Cornell University} and {Columbia University}},
+  howpublished = {\url{https://crcr0.github.io/RouterMAS/}},
+  year         = {2026}
+}</pre>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="en"><strong>Google · xAI · Cornell University · Columbia University</strong> · deployed via GitHub Pages</span>
+    <span class="zh"><strong>Google · xAI · 康奈尔大学 · 哥伦比亚大学</strong> · 经 GitHub Pages 部署</span>
+  </div>
+</footer>
+
+<script>
+const RM={"setup":{"H":4,"S":5,"A":6,"eta":1.5,"seed":20260923,"m":2},"mech":[{"id":"Unmarked","law":"Unmarked","resid":0.0,"dU":0.0,"dC":0.0,"kl":0.0},{"id":"Exact-Q constrained","law":"RouterMAS (continuation-constrained)","resid":2.7755575615628914e-16,"dU":4.440892098500626e-16,"dC":1.7763568394002505e-15,"kl":0.09286766615188391},{"id":"Unprojected bias","law":"Unprojected key bias","resid":0.20368028065638222,"dU":0.2432260977880265,"dC":0.23044446823628206,"kl":0.16655650446065856},{"id":"Immediate-Q constrained","law":"Immediate-value constrained","resid":0.03694598382720449,"dU":0.01559759967916663,"dC":0.0352367324485221,"kl":0.0897704410599253},{"id":"Row-space key","law":"Row-space key","resid":1.8631336116629047e-16,"dU":2.220446049250313e-16,"dC":8.881784197001252e-16,"kl":2.1987839163232515e-18},{"id":"Random feasible","law":"Random feasible direction","resid":1.249000902703301e-16,"dU":4.440892098500626e-16,"dC":8.881784197001252e-16,"kl":0.006526111274605855},{"id":"Full-rank three-action control","law":"Full-rank three-action control","resid":0,"dU":0,"dC":0,"kl":0.0}],"det":{"T":[32,64,128,256],"null001":[0.0036,0.0067,0.0075,0.0075],"null0001":[0.0002,0.0003,0.0004,0.0005],"mark001":[0.5081,0.8824,0.993,1.0],"mark0001":[0.1888,0.6973,0.9746,0.9999],"trials":10000},"eta":[{"eta":2.0,"gain":0.9644234777245231,"info":0.946470459535664,"gerr":0.2942713641410323,"ierr":0.3815215790882336,"resid":1.1657341758564144e-15,"mgain":0.22610601012007892,"mkl":0.05535012247453329},{"eta":4.0,"gain":0.9913595534011742,"info":0.9870206938245516,"gerr":0.16356508481278587,"ierr":0.21518868452375328,"resid":1.3530843112619095e-15,"mgain":0.11658919149423955,"mkl":0.014534758941280862},{"eta":8.0,"gain":0.9978550472442874,"info":0.9967956715913374,"gerr":0.08614345655514866,"ierr":0.11411916965533975,"resid":4.996003610813204e-16,"mgain":0.058526896026062494,"mkl":0.00365969727712791},{"eta":16.0,"gain":0.999441921084054,"info":0.999172855987371,"gerr":0.04418082099511378,"ierr":0.05872215021236327,"resid":9.575673587391975e-16,"mgain":0.029242152790077386,"mkl":0.0009144294315956997},{"eta":32.0,"gain":0.9998452193661705,"info":0.9997732719721839,"gerr":0.022368881949167085,"ierr":0.02977872301372042,"resid":1.0937431516033769e-15,"mgain":0.014606377571785786,"mkl":0.00022832469917021908},{"eta":64.0,"gain":0.9999531017979482,"info":0.9999324325042267,"gerr":0.011254122888235574,"ierr":0.014993882089614607,"resid":9.818534874028728e-16,"mgain":0.007298385942733602,"mkl":5.703258532708004e-05},{"eta":128.0,"gain":0.9999841008400535,"info":0.9999775485404735,"gerr":0.005644484124502247,"ierr":0.007523075122445544,"resid":1.3595895242968226e-15,"mgain":0.0036478542075757334,"mkl":1.4251262552456294e-05},{"eta":256.0,"gain":0.9999939286859973,"info":0.9999915925924547,"gerr":0.0028265976304920892,"ierr":0.00376807107680166,"resid":9.1550031444676e-16,"mgain":0.0018235753475455245,"mkl":3.561905131825409e-06}],"shrink":{"eta":128,"rho":0.5,"mean_gain_ratio":0.5000000000000112,"mean_information_ratio":0.24999854592568133,"max_quarter_error":0.000471474656051879},"replay":{"eta":128,"exact_mean":1.4251262552456294e-05,"sampled_mean":1.265650665128602e-05,"standard_error":1.193938796539886e-06,"z_error":-1.335709925661167},"identity_err":2.220446049250313e-16,"dir_resid":4.440892098500626e-16,"check":{"exact_max_dV":[4.440892098500626e-16,1.7763568394002505e-15],"imm_max_dV":[0.01559759967916663,0.0352367324485221],"unproj_max_dV":[0.2432260977880265,0.23044446823628206],"V0_ref":[2.096267010472525,4.912316088928392],"V0_exact":[2.0962670104725247,4.912316088928393]},"witness":{"p":[0.25,0.25,0.25,0.25],"q":[0.27,0.19,0.31,0.23],"QU":[1.0,0.8,0.6,0.4],"QC":[1,2,2,1],"d":[1,-3,3,-1],"s":[1,-1,1,-1],"U_p":0.7000000000000001,"U_q":0.7000000000000001,"C_p":1.5,"C_q":1.5,"gain":0.16,"kl":0.01614323804869158},"cases":{"richest":{"t":0,"s":0,"p":[0.16166433151069315,0.2937000499040932,0.22393007574937124,0.14767642508823053,0.029859406621460277,0.1431697111261515],"q":[0.37909288376532224,0.11854042496841843,0.13447925696061044,0.20901021235556358,0.077221096546046,0.08165612540403919],"q_imm":[0.35352731878874555,0.11987025642949017,0.14723842300215892,0.19530017727507698,0.0840145367806579,0.10004928772387037],"QU":[2.1377972680700026,2.1164101922907204,1.9339251301493183,1.8666400358204385,2.4089934652234417,2.433600086636047],"QC":[4.674748712291205,4.793008311564313,5.5808686945182595,5.001717901687675,5.6871220036985335,4.125837242289398],"rU":[0.4957534987941332,0.49980759224781757,0.3462062140618537,0.25437318214789917,0.7798337699819781,0.8355756230944182],"rC":[1.097101823709076,1.1982490005550595,1.987842304462456,1.4227802102935367,1.965817897373599,0.5558433702434901],"key":[1.1643689248261322,-1.4861934687021798,-0.770560222229748,1.405804584923805,-0.991205610040371,-1.8587798892199638],"dim":3,"kl":0.24708288563707967,"gain":0.7360337456304356,"dU":-1.1102230246251565e-16,"dC":2.220446049250313e-16,"dU_imm":0.008370999915026711,"dC_imm":0.004017121268955592,"dU_unproj":-0.07072197999826454,"dC_unproj":0.005961198689597325,"sTg":0.9984336245868659,"maxdp":0.2174285522546291},"weakest":{"t":0,"s":3,"p":[0.2121969906263883,0.27741104753401336,0.24198729909780337,0.12217578711673874,0.07792151566904126,0.06830735995601481],"q":[0.23813281683075868,0.2630845403747403,0.25493141010866627,0.11083065229705075,0.0552267298986666,0.07779385049011722],"q_imm":[0.24086598021348957,0.26532063446420584,0.2555519220192139,0.10954705100556276,0.054834534034976984,0.07387987826255078],"QU":[2.3099858438333163,2.2529387165503616,1.7541516201788565,1.6857306558957479,2.351594530480483,2.3352359378408454],"QC":[4.836328659538735,5.22390784868862,4.6462782098858915,5.577938531561573,3.979102380636009,4.517115498704987],"rU":[0.6711854353774707,0.6173047402320294,0.12761532334231496,0.0921830891383163,0.7233287720341052,0.781305873548806],"rC":[1.164233916476818,1.5974449878178876,1.0373292486921428,1.9836575724153953,0.35494719236395617,0.9172023623275267],"key":[0.9157552123137115,0.6743847170471585,0.2794898322310141,0.14499288589343923,0.12413006968474553,0.9087251052327945],"dim":3,"kl":0.007097528418871603,"gain":0.02186558090161842,"dU":1.3877787807814457e-17,"dC":5.551115123125783e-17,"dU_imm":0.00021368334376324627,"dC_imm":0.0013823956239432944,"dU_unproj":0.04087638932956335,"dC_unproj":0.005175423710190474,"sTg":0.03525296546542901,"maxdp":0.025935826204370377},"worst_imm":{"t":1,"s":1,"p":[0.09011970841838715,0.3237163326798727,0.21063841552442292,0.12612024217049966,0.2084715114280262,0.040933789778791446],"q":[0.1032595382952312,0.4282756903866628,0.07390866975588004,0.22261801422510014,0.16337518624251735,0.008562901094608541],"q_imm":[0.10271241423045602,0.46286684983296783,0.05331276229690032,0.18829976989490083,0.18209696110283788,0.010711242641937239],"QU":[1.2754635125621674,1.833364676655025,1.6746053337109181,1.4792395283639879,1.5210636449251815,1.6569017813417102],"QC":[3.396684004932241,3.325037881158413,3.921597434149743,3.9118593568906226,3.1413832305858818,2.8395120296467886],"rU":[0.1318534245958345,0.7124058249865158,0.6189116948259052,0.3490864954058178,0.3689698496010839,0.5094197772333497],"rC":[1.033984654572704,0.9498841113637073,1.3400406242586076,1.492383471389601,0.6330758479445032,0.3465416701676947],"key":[-0.28866327850294105,1.9308315976599235,-1.0981365439346515,0.6517572775961868,0.20539199370671907,-1.0568695285734575],"dim":3,"kl":0.12979933076690994,"gain":0.4360839627242693,"dU":-5.551115123125783e-17,"dC":0.0,"dU_imm":0.009502055076431037,"dC_imm":-0.03694598382720449,"dU_unproj":0.08710966509001028,"dC_unproj":-0.07788457917680403,"sTg":0.8546896281346864,"maxdp":0.13672974576854288}},"prefix_summary":[{"t":0,"s":0,"kl":0.24708288563707967,"gain":0.7360337456304356,"dim":3,"dU_imm":0.008370999915026711,"dC_imm":0.004017121268955592,"dU_un":-0.07072197999826454,"dC_un":0.005961198689597325,"dU":-1.1102230246251565e-16,"dC":2.220446049250313e-16,"sTg":0.9984336245868659},{"t":0,"s":1,"kl":0.1339764677119074,"gain":0.477805746085824,"dim":3,"dU_imm":-0.0032878989094454053,"dC_imm":-0.013335679511261939,"dU_un":-0.18066980695875795,"dC_un":0.07632395840114325,"dU":-6.938893903907228e-17,"dC":-5.551115123125783e-17,"sTg":1.0663964960757237},{"t":0,"s":2,"kl":0.14834203366604154,"gain":0.45089210067323127,"dim":3,"dU_imm":0.005902974143592046,"dC_imm":-0.0011165239402941007,"dU_un":-0.04030113013738765,"dC_un":0.043648369249610686,"dU":-1.1102230246251565e-16,"dC":-2.7755575615628914e-16,"sTg":0.6664740971555603},{"t":0,"s":3,"kl":0.007097528418871603,"gain":0.02186558090161842,"dim":3,"dU_imm":0.00021368334376324627,"dC_imm":0.0013823956239432944,"dU_un":0.04087638932956335,"dC_un":0.005175423710190474,"dU":1.3877787807814457e-17,"dC":5.551115123125783e-17,"sTg":0.03525296546542901},{"t":0,"s":4,"kl":0.06069812403628123,"gain":0.1878257361804032,"dim":3,"dU_imm":0.003376015993762041,"dC_imm":0.0011561219193185757,"dU_un":0.05166037065817085,"dC_un":0.08278843766427965,"dU":-1.3877787807814457e-17,"dC":1.1102230246251565e-16,"sTg":0.29708413249556437},{"t":1,"s":0,"kl":0.03937262150244122,"gain":0.12250701539792366,"dim":3,"dU_imm":-0.01138301636975915,"dC_imm":0.003945435751432219,"dU_un":-0.02846943038955127,"dC_un":0.13724855539901393,"dU":1.3877787807814457e-17,"dC":0.0,"sTg":0.20174589557280848},{"t":1,"s":1,"kl":0.12979933076690994,"gain":0.4360839627242693,"dim":3,"dU_imm":0.009502055076431037,"dC_imm":-0.03694598382720449,"dU_un":0.08710966509001028,"dC_un":-0.07788457917680403,"dU":-5.551115123125783e-17,"dC":0.0,"sTg":0.8546896281346864},{"t":1,"s":2,"kl":0.2201824176110268,"gain":0.6937245136126503,"dim":3,"dU_imm":-0.005082761780717093,"dC_imm":0.00561036440899787,"dU_un":-0.03617367270893729,"dC_un":-0.04799060065359029,"dU":-5.551115123125783e-17,"dC":0.0,"sTg":1.0615882068729807},{"t":1,"s":3,"kl":0.04664161160333745,"gain":0.1501187308865529,"dim":3,"dU_imm":-0.0003253753478184296,"dC_imm":-0.00516620448403364,"dU_un":0.05408412700621684,"dC_un":0.1670753103216679,"dU":1.3877787807814457e-17,"dC":-2.7755575615628914e-17,"sTg":0.27349053520901145},{"t":1,"s":4,"kl":0.05352524891385285,"gain":0.17266153708100873,"dim":3,"dU_imm":-0.005268188221394243,"dC_imm":-0.0035858518763639546,"dU_un":-0.03490966157733372,"dC_un":0.053540578476885536,"dU":-2.7755575615628914e-17,"dC":-5.551115123125783e-17,"sTg":0.3111471277297407},{"t":2,"s":0,"kl":0.0869956498242869,"gain":0.2604144824233716,"dim":3,"dU_imm":-0.0012715553397462664,"dC_imm":0.007048151965157234,"dU_un":-0.11172865158389511,"dC_un":0.06821847005272552,"dU":0.0,"dC":-5.551115123125783e-17,"sTg":0.3706444788628363},{"t":2,"s":1,"kl":0.015448878205448303,"gain":0.04696293890391705,"dim":3,"dU_imm":-0.00678213106599021,"dC_imm":-0.0020942126006721073,"dU_un":-0.15978978724793094,"dC_un":0.003512614631360489,"dU":0.0,"dC":2.7755575615628914e-17,"sTg":0.07283779428538294},{"t":2,"s":2,"kl":0.07962456028631446,"gain":0.2489981721093475,"dim":3,"dU_imm":-0.001395208529161418,"dC_imm":-0.013771828790687418,"dU_un":0.12457473576923755,"dC_un":0.15652189742747696,"dU":-2.7755575615628914e-17,"dC":5.551115123125783e-17,"sTg":0.4039510234017378},{"t":2,"s":3,"kl":0.1751940244453022,"gain":0.49851875707309856,"dim":3,"dU_imm":-0.001560784614800026,"dC_imm":0.008948881503872713,"dU_un":-0.006979617887174716,"dC_un":-0.18049077928017676,"dU":3.469446951953614e-17,"dC":5.551115123125783e-17,"sTg":0.5781889606644193},{"t":2,"s":4,"kl":0.11675518591083683,"gain":0.34538052223661747,"dim":3,"dU_imm":-0.010425735269906644,"dC_imm":0.003930154533054342,"dU_un":-0.020221332326955818,"dC_un":-0.1687598435346893,"dU":2.7755575615628914e-17,"dC":2.7755575615628914e-17,"sTg":0.4668503614905496},{"t":3,"s":0,"kl":0.022138980671379774,"gain":0.06867649384918938,"dim":3,"dU_imm":-1.214306433183765e-17,"dC_imm":-3.469446951953614e-17,"dU_un":-0.01398592845089261,"dC_un":-0.009631915810259864,"dU":-1.214306433183765e-17,"dC":-3.469446951953614e-17,"sTg":0.11403575946050837},{"t":3,"s":1,"kl":0.028886374485777844,"gain":0.08937130032250992,"dim":3,"dU_imm":6.938893903907228e-18,"dC_imm":0.0,"dU_un":-0.023960147093784773,"dC_un":0.12454662636945216,"dU":6.938893903907228e-18,"dC":0.0,"sTg":0.1450299280224978},{"t":3,"s":2,"kl":0.1656700351967179,"gain":0.5467759046728142,"dim":3,"dU_imm":-6.938893903907228e-18,"dC_imm":-6.158268339717665e-17,"dU_un":-0.05806176715325964,"dC_un":-0.14079130363738954,"dU":-6.938893903907228e-18,"dC":-6.158268339717665e-17,"sTg":0.9411422995042542},{"t":3,"s":3,"kl":0.046646289148709545,"gain":0.13835893514719197,"dim":3,"dU_imm":-6.938893903907228e-18,"dC_imm":-1.3877787807814457e-17,"dU_un":-0.03513723895969209,"dC_un":-0.004499874157101014,"dU":-6.938893903907228e-18,"dC":-1.3877787807814457e-17,"sTg":0.19363228707021538},{"t":3,"s":4,"kl":0.033275074995154495,"gain":0.11934328390344694,"dim":3,"dU_imm":2.2551405187698492e-17,"dC_imm":3.469446951953614e-18,"dU_un":-0.021758358093545746,"dC_un":-0.20368028065638222,"dU":2.2551405187698492e-17,"dC":3.469446951953614e-18,"sTg":0.28223131476564056}],"traces":{"marked":[[0.625,0.662,2.27,2.266,2.324,1.744,2.763,3.261,3.758,3.547,4.076,4.047,2.078,0.792,1.468,0.834,-0.249,-0.85,-1.3,-1.591,-1.784,-0.324,0.808,1.03,-0.121,-0.754,0.853,1.045,0.632,1.234,2.316,2.279,2.697,2.816,3.786,3.342,4.007,3.494,3.501,1.951,2.145,2.564,3.487,4.796,5.905,6.051,7.116,7.855,8.825,9.123,8.374,6.776,6.801,7.075,8.205,7.802,7.52,7.312,6.627,7.431,8.04,8.316,8.127,9.082,10.18,9.736,8.481,9.231,9.255,9.355,10.13,9.812,10.782,9.931,9.172,9.143,9.561,10.419,11.989,12.266,11.115,11.161,10.769,10.404,10.429,9.729,9.015,9.011,9.541,8.683,7.532,6.633,5.805,6.513,6.152,5.668,4.914,4.998,6.127,6.952,7.953,8.114,9.223,10.553,9.59,9.654,10.787,10.676,10.104,9.695,10.797,11.566,13.173,13.394,13.888,13.011,12.836,12.928,12.584,11.984,11.991,12.499,12.148,12.26,13.569,13.528,14.661,14.54],[-0.425,-0.447,-0.731,-0.23,-0.944,-1.133,-0.016,-0.914,-1.066,-1.667,-0.744,-0.84,-0.782,-0.59,-0.06,-0.427,0.068,0.78,1.703,1.771,1.581,1.264,1.288,1.357,0.52,0.82,1.428,1.692,2.662,2.928,3.346,4.301,3.56,4.365,3.528,3.427,2.988,3.866,4.396,5.159,5.577,5.769,5.407,5.55,5.497,5.712,6.815,7.194,8.117,8.312,8.989,9.102,10.672,10.601,11.733,11.775,11.377,11.476,11.648,12.529,13.659,13.548,14.471,14.686,15.789,15.471,16.601,16.911,17.083,16.449,15.819,16.654,16.171,16.216,15.479,14.78,15.909,16.313,16.739,17.003,18.085,18.078,16.718,16.866,16.107,15.697,16.8,16.435,16.861,15.866,16.995,16.166,16.173,16.674,17.983,17.663,18.288,17.998,17.459,17.358,18.487,19.299,20.409,20.909,21.304,20.537,21.459,21.016,22.325,23.28,22.129,22.274,23.36,23.546,24.655,24.556,24.073,23.825,24.354,24.312,24.483,23.569,24.701,25.358,25.852,26.079,25.243,25.517],[0.97,1.062,0.7,0.36,0.778,1.042,0.301,1.664,2.676,3.558,3.126,3.027,2.588,3.086,4.188,3.786,4.918,5.722,4.492,4.372,5.295,4.832,4.155,4.918,5.888,5.571,7.277,7.206,7.624,7.947,7.717,9.177,9.801,10.683,12.29,12.506,13.615,13.517,14.046,14.007,15.124,15.418,15.948,15.652,16.575,17.148,18.07,17.558,18.182,18.174,17.547,17.739,17.933,17.494,18.624,19.438,20.503,20.957,21.486,22.084,22.109,22.707,23.63,23.775,24.904,25.601,25.321,24.746,25.371,26.831,26.721,28.051,29.18,29.878,29.137,28.735,28.489,28.637,29.166,29.038,28.694,28.752,29.428,29.063,28.304,28.461,27.672,26.17,24.806,24.767,25.184,25.184,26.106,26.254,25.465,25.579,25.297,24.933,26.036,26.754,27.863,28.009,29.138,28.921,30.024,29.97,31.158,32.124,32.182,32.585,33.389,33.542,34.659,34.588,35.67,35.387,36.696,36.614,37.031,38.183,38.713,39.17,40.286,40.69,40.497,40.418,39.451,39.428],[-0.141,1.168,0.468,0.572,1.495,1.175,0.209,-0.896,0.234,-0.018,-0.361,-1.108,-1.936,-2.517,-2.021,-1.836,-2.082,-1.934,-1.42,-0.817,-0.324,0.642,1.307,1.186,0.111,1.521,1.123,0.875,1.37,1.317,0.687,-0.863,0.06,-0.304,-0.636,0.083,0.858,0.784,2.392,2.106,2.13,3.332,4.441,4.167,4.593,5.047,4.906,4.902,5.432,5.428,5.323,4.205,5.175,5.452,6.422,6.375,7.945,8.138,9.447,10.907,11.895,12.772,12.41,13.365,13.848,13.214,14.524,15.934,16.904,16.584,16.223,16.517,16.237,17.601,16.863,16.91,17.825,18.522,17.555,17.681,16.892,17.194,18.503,18.244,19.852,20.19,20.215,19.945,21.077,21.769,22.834,22.684,23.18,22.206,23.177,24.609,25.58,26.293,26.791,27.448,28.578,28.29,28.755,29.614,31.184,30.897,30.704,30.536,32.106,32.856,32.405,32.197,33.805,32.296,31.865,31.711,31.465,31.557,31.405,30.95,31.367,30.558,32.129,32.914,34.582,34.927,36.059,35.673],[-1.96,-2.444,-2.34,-1.56,-0.571,-0.594,0.329,1.074,1.569,1.318,1.736,2.055,2.55,1.577,2.886,3.078,4.048,4.269,3.826,4.091,5.699,7.016,5.786,5.931,6.102,6.871,8.18,7.163,6.373,6.728,5.644,6.413,6.91,7.06,8.158,8.422,9.138,9.469,10.439,10.418,10.883,11.649,12.145,12.444,13.367,12.938,12.19,10.708,11.126,11.252,12.175,12.082,11.455,10.854,11.777,12.61,13.692,14.095,15.404,15.018,14.788,14.913,16.043,16.641,17.564,17.064,16.702,16.574,15.82,15.938,15.167,16.043,15.329,16.762,17.438,18.08,19.011,18.737,18.023,17.584,18.555,18.852,18.877,18.981,18.987,19.101,19.63,19.858,19.231,18.853,18.016,18.208,18.034,19.373,19.092,19.154,20.284,19.148,17.524,18.888,17.528,17.426,17.921,17.248,17.875,18.17,19.093,19.693,20.223,21.085,22.097,22.242,21.96,21.511,21.098,21.097,22.02,21.56,20.477,21.124,22.253,23.211,23.596,23.95,24.961,24.635,25.259,26.664],[1.57,1.703,1.728,2.445,3.554,3.611,4.534,4.192,4.856,6.174,5.742,6.123,7.253,7.397,8.368,7.924,9.233,9.553,10.686,10.412,11.335,12.794,11.958,12.049,13.166,13.616,14.082,15.514,16.319,16.548,16.266,16.269,17.371,17.213,18.522,19.278,19.045,20.362,21.332,20.849,20.423,20.687,22.107,22.816,23.739,24.044,25.614,25.809,26.926,26.879,26.138,26.355,26.98,27.129,28.699,29.417,30.534,30.75,31.769,31.173,31.702,32.561,32.222,32.139,33.709,33.801,33.972,33.925,34.455,34.194,33.832,33.348,34.48,34.592,35.721,35.47,36.274,37.151,36.345,35.82,36.237,34.769,35.788,36.049,36.972,37.368,37.833,37.831,38.801,39.807,40.937,40.356,40.774,40.535,41.458,41.673,40.658,40.803,40.594,40.081,40.507,41.307,41.916,41.129,41.658,41.821,42.448,42.677,43.353,42.948,43.366,44.029,45.158,45.855,45.746,45.872,46.989,46.584,47.693,48.385,47.953,47.435,47.831,47.169,46.337,46.493,47.071,47.365],[0.493,1.262,0.179,0.399,0.117,-0.582,0.341,0.729,0.101,0.901,2.509,3.222,1.992,1.718,0.981,0.718,-0.512,-0.786,-1.534,-1.606,-2.377,-1.61,-2.013,-1.87,-0.262,-0.205,-1.46,-1.129,-1.76,-1.356,-1.987,-1.907,-0.985,-1.121,-0.151,0.198,-1.032,-0.513,0.016,0.798,1.264,2.091,2.699,3.438,3.243,2.899,2.36,2.087,2.513,3.204,3.631,3.626,3.485,3.041,4.144,5.53,6.542,5.859,6.988,7.294,8.376,8.583,9.506,9.771,8.934,9.126,10.258,9.88,9.518,10.473,10.192,10.384,10.232,10.381,10.097,10.129,11.1,11.863,12.833,12.396,13.528,12.855,12.066,11.383,10.128,10.407,11.516,11.127,11.553,11.482,12.286,11.698,12.124,10.981,10.148,11.114,11.888,11.735,12.657,13.35,14.361,15.665,16.083,17.285,18.594,18.809,18.05,17.733,19.34,20.542,21.218,20.816,20.534,20.029,21.636,21.051,20.862,22.267,22.796,22.114,21.763,21.763,21.611,20.782,21.2,21.353,20.903,21.213],[-0.23,-0.748,-2.754,-3.388,-2.306,-2.183,-1.081,-1.239,-1.678,-1.894,-2.97,-2.902,-1.931,-1.885,-1.468,-1.723,-1.046,-1.334,-0.252,-0.548,0.135,-0.161,0.466,0.681,1.604,1.906,1.754,1.159,1.652,1.778,2.163,1.034,1.957,3.368,3.006,3.308,4.44,5.803,6.412,5.514,6.437,6.778,7.196,6.757,7.68,7.393,7.859,7.875,8.452,8.494,9.803,10.067,10.99,11.945,12.569,12.051,13.021,13.735,14.658,14.57,14.966,15.154,16.077,15.762,16.439,15.908,15.477,16.794,15.827,16.055,16.52,16.599,16.425,16.57,15.832,16.657,16.296,17.803,17.827,17.972,17.533,17.725,17.039,17.096,18.229,18.34,19.311,18.46,18.484,18.88,19.409,19.366,20.043,19.97,21.577,21.303,22.226,22.521,23.05,23.273,24.402,24.675,23.886,24.093,23.654,23.987,25.273,25.273,25.898,26.037,26.566,27.229,26.146,25.003,25.973,26.685,27.814,27.906,28.876,28.559,28.326,28.418,28.365,28.283,29.205,29.284,28.448,27.98],[-0.431,-0.748,-0.219,-0.399,-0.831,-1.453,-0.924,-0.647,-0.07,0.278,1.699,2.019,3.101,3.224,3.889,4.487,4.277,5.641,6.268,6.864,7.834,7.301,6.071,7.026,6.884,6.797,7.929,7.551,8.017,7.573,7.343,7.498,6.423,7.585,8.667,8.856,9.251,9.943,11.072,11.229,12.359,12.184,11.975,12.087,12.582,13.387,12.55,13.31,12.504,12.187,11.986,12.202,12.619,13.575,14.104,14.267,15.37,16.139,16.716,15.598,16.727,16.839,16.629,17.271,17.785,17.973,19.055,19.34,20.76,20.273,19.522,19.568,19.393,19.515,20.438,20.048,18.094,18.255,19.387,19.557,19.195,19.977,20.554,21.304,21.799,23.764,24.391,24.633,24.657,24.667,23.878,23.946,23.187,24.135,24.762,25.567,25.172,25.101,26.281,26.973,28.09,28.684,29.655,30.105,31.207,32.667,33.276,32.792,33.416,34.228,34.253,35.686,35.343,36.02,35.271,34.848,35.313,35.534,37.104,37.196,38.482,38.99,38.708,38.709,39.202,40.157,41.08,40.763],[1.129,1.171,1.848,1.996,1.804,2.256,3.179,3.259,4.447,4.634,4.007,4.007,5.137,5.137,4.775,4.158,4.352,4.4,4.571,3.971,3.628,3.815,3.919,4.139,3.306,3.498,4.421,4.696,5.812,5.997,6.423,6.42,5.583,4.495,4.519,4.796,5.294,5.556,5.355,5.619,3.65,3.649,2.419,2.03,1.668,1.51,1.517,2.386,3.515,4.173,4.67,4.617,4.641,4.778,5.308,5.307,5.515,5.563,4.825,4.347,5.317,5.031,5.707,6.512,7.188,6.783,7.312,7.486,8.409,9.126,8.764,9.53,8.3,8.209,9.132,9.108,9.638,10.604,11.133,12.64,13.316,12.752,13.723,14.017,13.674,12.679,13.097,12.799,13.313,13.716,13.354,13.125,12.041,12.222,13.351,13.304,14.274,14.728,15.837,15.621,16.246,15.979,16.901,16.525,17.054,17.191,18.799,18.538,17.766,17.911,18.976,18.929,20.061,20.657,21.58,21.826,22.749,22.968,23.633,23.231,23.858,24.662,25.16,25.363,25.153,25.206,24.844,25.198],[-0.833,-1.207,-1.621,-1.938,-1.262,-1.074,-0.656,-0.755,0.168,1.508,2.184,3.644,4.753,4.456,4.223,4.992,5.521,4.839,5.466,5.098,4.673,4.455,5.08,5.268,5.686,5.75,4.96,5.718,6.136,7.091,8.511,8.429,10.036,11.376,12.685,12.838,12.499,11.98,12.999,13.041,13.235,13.737,14.707,14.806,16.376,16.509,17.689,18.069,19.677,19.713,19.274,19.336,20.401,20.128,19.291,19.63,19.823,20.537,21.46,21.586,22.115,22.26,22.925,22.917,24.488,25.245,26.215,27.621,28.297,28.994,30.28,30.943,30.599,31.291,31.869,31.867,31.874,32.466,32.075,32.236,33.151,33.848,34.764,35.472,36.443,36.889,37.908,38.023,39.105,38.274,38.298,39.177,40.1,39.931,41.014,41.777,42.203,42.388,42.814,43.217,43.635,43.855,44.958,44.362,45.969,45.217,46.32,45.786,47.394,47.575,48.885,48.968,48.738,48.585,49.078,49.221,49.069,49.194,50.503,50.097,51.068,51.106,52.076,51.825,52.748,52.431,53.401,53.493],[0.465,0.049,0.823,1.666,1.525,1.688,2.611,3.425,3.921,4.878,5.801,5.118,4.744,4.289,5.419,5.116,6.724,6.26,6.789,6.537,6.054,6.117,7.226,6.906,7.971,7.9,9.186,9.905,8.754,9.347,10.269,9.895,10.571,10.486,11.409,11.508,11.355,11.439,12.243,12.435,13.552,14.147,15.277,15.015,14.278,15.017,16.147,16.951,18.034,18.437,19.535,20.033,19.671,19.667,19.691,19.919,19.689,19.602,19.392,20.143,20.819,20.529,19.957,20.018,21.147,20.782,21.027,22.357,21.727,22.323,23.245,23.438,23.934,24.208,25.34,25.582,26.209,27.642,27.299,26.981,28.291,28.072,28.489,28.684,29.787,30.631,30.421,31.16,30.927,30.856,31.353,31.653,31.6,31.726,31.574,31.405,32.514,32.232,33.84,33.886,35.015,34.018,34.989,35.734,35.541,34.858,34.882,34.811,34.239,34.999,35.494,36.449,37.126,37.529,35.56,35.401,34.951,35.407,37.112,37.23,37.76,38.054,38.977,38.658,39.787,39.79,41.36,42.218],[1.019,1.422,0.681,0.876,1.406,2.125,1.774,2.976,4.093,3.621,5.041,5.418,6.727,7.889,8.992,9.217,9.712,9.758,10.68,10.741,9.992,10.304,10.193,9.687,10.314,11.072,10.854,11.609,12.712,13.914,15.043,14.362,15.782,15.523,15.242,16.675,15.989,16.046,16.053,16.332,17.939,19.372,20.343,21.082,21.327,21.181,21.24,21.447,21.977,23.131,21.901,21.684,22.213,22.17,23.279,24.712,25.289,26.044,25.763,24.213,25.343,25.938,26.356,26.363,26.893,27.674,27.846,27.925,27.777,28.522,29.238,28.732,28.977,28.93,29.853,29.228,29.693,29.97,29.994,30.398,31.368,31.482,31.98,32.165,32.223,32.438,33.568,33.124,32.932,32.161,31.799,31.574,31.292,31.226,31.652,30.953,30.522,30.73,31.811,32.503,32.141,32.451,32.645,32.208,33.778,33.334,34.437,34.353,35.462,34.995,34.365,34.548,35.044,34.366,35.546,34.043,33.159,33.851,34.983,34.65,34.224,34.493,34.131,34.123,33.64,33.487,34.016,34.219],[0.923,1.152,2.074,1.987,3.09,3.428,4.998,3.717,4.834,5.238,6.257,6.954,7.877,8.079,7.113,7.022,7.309,7.039,7.423,6.8,8.11,8.294,7.896,7.782,8.912,8.839,9.416,10.058,10.588,9.645,10.931,11.193,12.763,14.092,14.599,14.761,15.871,16.148,17.213,16.931,16.536,16.465,15.39,15.481,16.767,16.323,15.439,15.165,16.088,15.833,15.587,15.37,14.622,13.718,14.213,14.142,15.75,16.5,17.077,17.834,17.472,17.401,18.078,19.08,20.366,20.673,20.311,20.274,21.197,20.609,21.579,22.781,23.703,23.485,24.551,24.899,26.002,26.32,25.606,25.77,23.764,24.477,24.134,24.182,24.807,25.504,26.633,26.643,27.137,28.291,27.86,28.263,29.393,30.161,29.328,28.476,29.053,30.416,30.946,31.446,31.271,31.985,31.101,30.641,31.564,31.626,32.596,32.497,33.807,33.753,34.283,34.133,33.991,34.27,33.845,33.957,33.675,33.828,34.436,34.484,35.905,36.108,35.668,35.829,36.604,36.45,36.876,36.793],[1.129,1.533,0.302,0.063,0.838,0.913,1.442,1.004,0.642,0.521,-0.316,-2.162,-1.537,-0.845,0.264,-0.594,0.536,0.582,1.504,1.855,2.281,2.338,3.261,3.16,2.959,2.596,3.678,3.807,4.384,5.151,4.72,4.14,3.38,4.582,5.258,5.851,6.862,7.622,7.083,6.766,6.974,8.247,8.776,8.596,8.165,8.051,9.116,9.122,9.896,10.588,11.511,11.65,10.078,10.252,10.258,10.576,11.106,10.846,10.16,9.98,10.509,10.19,9.908,9.009,10.319,9.391,10.362,10.29,10.967,10.961,11.379,11.479,12.107,12.804,13.822,14.143,12.174,11.491,12.461,13.32,12.988,13.264,13.289,14.062,12.102,11.33,11.954,11.625,12.155,12.223,12.718,13.073,12.722,12.448,13.467,13.428,14.447,14.654,15.184,16.338,15.597,16.294,17.715,17.383,18.515,18.866,18.504,18.851,20.421,20.575,20.521,20.67,20.239,20.196,21.207,22.409,23.183,23.922,25.025,25.85,25.875,26.001,27.083,26.972,26.997,26.069,25.232,26.187],[-0.392,-0.308,-1.023,-1.283,-2.892,-3.178,-3.353,-3.111,-2.939,-3.268,-2.24,-0.78,-1.119,-1.948,-1.522,-1.622,-0.946,-0.868,-1.009,-0.411,0.512,0.574,-0.14,-0.04,0.168,0.865,1.53,1.913,3.333,2.36,2.531,3.189,2.749,3.626,3.684,3.455,3.104,3.368,2.285,1.699,2.615,2.713,3.636,3.781,4.027,4.118,5.049,5.05,4.832,4.83,5.359,6.109,7.079,7.838,8.809,9.971,10.595,10.251,11.56,11.132,10.446,10.634,11.766,11.684,12.36,11.676,12.793,13.197,13.368,14.182,13.477,13.539,11.57,11.612,10.985,11.051,11.966,12.285,13.892,13.976,13.746,14.514,16.122,16.164,15.201,15.797,16.374,15.675,16.694,16.333,17.415,16.754,16.323,17.64,16.85,17.073,18.778,20.183,19.032,19.252,17.779,18.279,19.25,18.963,19.457,20.867,21.798,23.258,24.367,25.676,24.526,24.802,25.905,26.352,24.692,24.783,24.808,24.765,25.894,25.962,27.383,28.692,28.261,28.262,29.185,29.379,30.8,29.513],[-0.837,-0.241,0.681,0.909,1.832,1.614,2.536,2.319,3.242,3.623,4.705,5.444,6.753,7.63,7.429,7.566,8.481,9.358,9.887,11.049,11.972,11.69,12.822,13.18,12.39,12.504,11.274,11.373,12.296,11.772,12.901,13.196,13.69,15.053,15.479,14.846,14.472,13.789,14.969,14.709,16.13,16.194,17.116,16.174,15.823,17.163,17.658,17.194,16.863,17.622,18.754,19.451,17.828,17.243,17.437,17.499,18.127,18.347,18.843,18.934,18.22,18.565,19.488,19.65,20.759,19.547,20.47,20.152,21.285,21.186,20.824,21.165,21.648,21.468,22.438,22.587,23.719,23.713,24.14,24.139,24.632,24.911,25.405,25.746,26.669,28.102,29.231,28.913,29.491,30.235,31.158,31.389,30.958,30.58,31.709,31.71,32.426,32.471,33.096,33.257,34.286,34.377,35.947,34.439,35.458,35.572,36.702,36.462,37.432,36.989,36.586,36.475,36.144,36.181,37.313,37.472,35.849,35.231,35.697,36.467,37.132,37.427,38.103,38.145,39.068,39.833,39.261,39.36],[-0.339,-0.746,0.383,1.152,1.047,1.127,1.545,1.971,1.995,1.0,0.575,0.674,0.312,0.241,0.924,1.633,2.162,2.439,3.362,4.795,5.86,6.052,5.834,4.817,6.237,6.407,6.016,7.421,8.344,8.621,9.609,10.256,10.36,10.508,11.038,11.565,12.647,14.107,15.527,14.947,16.555,16.409,15.333,15.525,16.039,16.228,17.36,17.031,18.638,19.231,20.838,20.987,20.705,20.978,20.696,20.689,21.605,21.945,23.048,23.16,24.226,24.535,25.032,24.961,24.68,25.0,25.804,25.624,26.153,26.922,26.781,26.474,25.669,25.948,24.325,24.082,23.973,24.293,23.46,23.737,24.846,24.843,24.213,24.255,25.177,26.01,25.527,25.848,25.088,25.233,25.729,24.442,25.02,24.493,24.518,24.851,25.96,26.006,26.81,26.952,27.482,27.072,28.043,27.564,28.094,28.288,28.818,28.03,29.163,29.009,30.715,31.483,31.294,30.865,28.905,29.157,29.654,29.276,29.135,29.523,29.149,29.526,30.055,30.123,29.792,29.502,30.031,30.027],[-0.141,-1.23,-2.067,-1.879,-2.273,-2.591,-1.572,-1.48,-0.951,-1.946,-1.27,-2.184,-0.917,-1.194,-0.271,1.038,1.567,1.302,2.873,3.746,3.032,3.311,4.409,4.02,5.152,5.214,6.635,6.838,7.967,7.632,9.202,8.795,7.911,8.407,9.072,9.769,10.871,10.309,11.441,11.331,10.559,11.761,12.275,12.917,12.081,12.414,13.546,14.204,13.455,14.729,15.353,15.39,15.919,16.214,16.68,16.432,16.001,16.046,16.239,15.566,16.489,16.193,15.621,15.733,15.283,15.182,16.467,15.867,16.362,16.683,17.605,17.651,18.621,18.568,19.538,19.538,19.337,20.292,21.96,22.152,23.255,24.688,25.797,25.96,27.092,27.001,26.639,25.961,24.389,24.072,25.042,24.989,24.248,25.011,26.12,25.692,26.821,27.225,28.327,28.488,28.137,28.906,27.334,27.292,27.709,27.948,28.477,28.19,28.768,29.536,28.699,28.964,28.971,28.703,27.448,27.131,27.549,27.813,27.58,28.851,29.774,29.927,30.353,30.471,32.079,32.482,33.011,33.385],[0.418,0.518,0.179,0.317,-0.42,-0.444,-0.633,-0.04,0.882,0.8,0.554,1.312,1.841,1.98,0.749,1.715,0.878,1.094,2.223,1.627,1.395,0.832,0.155,0.203,1.623,2.059,1.72,2.015,2.51,2.738,3.134,4.286,3.571,4.445,4.639,3.965,3.719,4.068,3.617,3.917,3.084,3.091,4.194,4.342,3.991,5.265,5.889,6.077,6.574,5.941,6.518,6.447,7.576,8.172,8.02,7.746,8.275,8.276,7.59,6.989,7.161,7.306,8.228,8.292,8.317,8.226,9.196,9.31,10.918,12.282,12.13,12.174,12.978,13.675,12.916,13.412,13.584,14.586,15.081,15.298,15.016,15.208,16.124,16.471,16.021,15.723,16.855,16.754,15.917,15.888,14.921,13.926,14.55,13.917,13.555,13.974,14.896,15.081,16.689,16.055,17.026,17.98,18.951,19.096,17.969,19.402,19.26,18.817,19.346,19.107,19.572,19.78,21.387,22.079,23.209,22.613,23.745,23.857,24.481,23.8,23.824,23.141,22.779,22.932,24.064,23.437,21.468,21.466]],"null":[[1.117,1.264,0.862,-0.737,-0.955,-1.207,-1.002,-1.622,-2.373,-1.876,-0.905,-0.631,-0.022,0.69,-0.386,-0.801,-0.953,-1.045,-3.014,-3.61,-3.603,-2.144,-1.078,-0.926,-2.29,-2.789,-2.998,-3.561,-4.188,-4.066,-5.629,-5.712,-4.583,-4.654,-3.524,-2.758,-1.337,-0.623,-1.361,-1.654,-3.277,-4.608,-4.19,-3.944,-4.287,-4.648,-5.723,-5.696,-6.109,-6.047,-6.883,-7.693,-7.893,-8.014,-7.091,-8.377,-8.659,-8.36,-8.335,-8.107,-8.083,-8.357,-8.549,-9.182,-9.526,-10.522,-10.854,-11.514,-13.138,-12.953,-13.304,-14.99,-15.741,-14.983,-14.359,-14.43,-13.348,-12.588,-11.912,-12.966,-13.719,-13.571,-12.601,-13.573,-13.971,-13.925,-14.151,-14.449,-15.415,-15.074,-16.304,-16.395,-17.025,-17.386,-18.135,-18.234,-20.203,-21.292,-21.492,-21.639,-22.122,-22.931,-23.768,-24.822,-25.449,-25.306,-26.779,-26.816,-27.899,-28.189,-28.551,-27.785,-28.59,-27.775,-29.398,-29.436,-28.303,-29.853,-30.936,-30.729,-31.102,-30.974,-29.844,-29.602,-30.431,-30.922,-31.75,-31.822],[1.103,0.68,0.705,1.417,0.668,1.36,0.62,-0.513,-2.482,-2.329,-1.72,-2.038,-2.256,-3.392,-4.07,-3.721,-3.112,-2.733,-3.095,-3.003,-3.395,-4.248,-4.61,-5.419,-4.842,-5.541,-5.123,-5.219,-3.798,-3.869,-2.737,-2.588,-1.456,-2.639,-2.015,-2.007,-2.06,-2.648,-1.725,-3.012,-3.462,-3.827,-4.258,-4.51,-4.74,-5.418,-5.769,-6.578,-7.795,-7.768,-8.527,-8.892,-7.921,-8.779,-9.55,-8.853,-7.93,-8.601,-8.183,-8.131,-8.871,-8.722,-8.193,-8.636,-10.591,-10.935,-11.168,-12.38,-13.217,-13.535,-12.858,-12.651,-13.013,-13.535,-13.744,-13.717,-14.8,-17.201,-16.624,-17.22,-18.186,-20.058,-19.865,-20.967,-22.627,-22.68,-23.485,-23.051,-25.02,-25.189,-26.026,-26.704,-27.102,-27.27,-28.237,-28.084,-27.407,-27.36,-27.722,-28.017,-26.41,-27.626,-26.703,-27.381,-28.533,-28.2,-28.83,-28.785,-29.136,-28.803,-29.489,-29.823,-30.262,-31.38,-30.263,-30.121,-30.483,-30.536,-32.196,-31.603,-32.289,-31.378,-31.728,-31.66,-31.557,-31.284,-30.368,-30.733],[-2.472,-1.563,-1.925,-2.094,-0.914,-0.003,-0.212,-0.063,-0.817,-1.345,-2.178,-2.024,-3.497,-3.415,-2.445,-2.366,-2.518,-2.404,-3.479,-4.14,-4.333,-4.793,-5.011,-5.0,-5.432,-5.887,-6.564,-6.161,-6.914,-7.49,-8.249,-8.418,-9.103,-10.246,-9.57,-8.975,-8.446,-7.173,-7.711,-7.491,-6.814,-6.627,-7.455,-7.31,-7.207,-7.058,-6.529,-6.968,-7.12,-7.509,-8.246,-7.604,-8.834,-9.241,-10.324,-11.443,-10.34,-10.92,-9.791,-8.991,-9.224,-8.455,-8.787,-8.73,-10.203,-10.57,-11.009,-11.013,-11.772,-11.62,-11.812,-11.492,-11.681,-11.995,-12.831,-12.786,-13.016,-13.538,-13.073,-14.191,-14.553,-14.769,-14.063,-14.015,-14.981,-15.047,-16.52,-16.317,-17.573,-17.527,-17.807,-19.807,-20.169,-20.872,-19.763,-20.572,-19.649,-19.597,-20.961,-21.956,-22.704,-21.244,-21.959,-21.767,-22.198,-22.48,-23.555,-24.574,-23.604,-23.397,-24.229,-24.002,-24.404,-24.209,-25.682,-25.362,-26.985,-27.424,-26.62,-27.183,-26.26,-26.72,-27.171,-27.389,-26.971,-26.88,-27.631,-27.428],[0.97,0.561,-0.515,0.639,1.772,1.532,0.301,0.05,-1.033,-1.361,-1.991,-2.091,-1.121,-1.349,-1.192,-0.819,-0.971,-1.552,-0.975,-1.466,-0.79,-0.706,-0.901,-0.856,-1.983,-2.819,-4.126,-3.983,-5.952,-6.006,-5.51,-5.668,-5.175,-4.983,-5.61,-5.609,-6.237,-6.453,-6.804,-6.712,-6.609,-6.662,-6.244,-7.333,-7.758,-7.458,-8.585,-9.003,-9.177,-9.127,-10.357,-10.942,-11.274,-13.274,-14.883,-14.559,-14.053,-12.901,-13.639,-12.757,-13.593,-14.492,-15.297,-15.034,-15.711,-15.75,-14.78,-14.632,-15.259,-15.839,-16.915,-17.005,-17.397,-17.314,-16.248,-16.692,-16.844,-17.526,-17.519,-17.956,-18.381,-18.767,-19.198,-18.501,-17.995,-18.292,-18.732,-19.025,-19.83,-19.396,-18.866,-19.676,-21.04,-21.141,-20.218,-20.337,-19.919,-20.515,-21.598,-22.513,-22.845,-23.25,-24.009,-24.11,-24.947,-25.105,-25.448,-23.988,-24.35,-24.695,-24.836,-24.839,-24.374,-24.118,-24.327,-24.496,-24.777,-25.559,-26.296,-25.528,-24.605,-24.341,-23.812,-24.393,-24.755,-24.913,-26.143,-25.265],[-0.152,-0.153,0.77,-0.017,-1.247,-0.937,-2.02,-2.583,-3.813,-3.971,-3.946,-3.68,-5.303,-5.001,-5.194,-6.862,-6.356,-6.033,-5.839,-6.056,-6.594,-7.127,-7.102,-7.398,-7.34,-7.941,-7.364,-7.272,-7.553,-8.149,-9.225,-9.296,-9.542,-9.633,-10.438,-10.882,-10.353,-10.511,-10.942,-10.949,-11.142,-11.243,-10.737,-10.962,-13.434,-12.757,-12.563,-12.81,-12.315,-13.288,-12.366,-13.361,-14.194,-14.61,-14.805,-15.39,-16.223,-17.122,-19.076,-17.914,-19.278,-20.76,-21.35,-21.421,-22.254,-22.587,-21.665,-21.971,-22.601,-21.141,-21.503,-21.672,-22.358,-22.28,-22.694,-22.785,-23.544,-22.111,-23.72,-23.818,-23.241,-23.858,-23.329,-21.896,-23.047,-23.365,-22.688,-21.92,-22.153,-21.991,-21.069,-21.382,-22.133,-22.223,-21.3,-21.301,-21.502,-20.547,-21.3,-21.419,-20.953,-21.768,-22.015,-21.323,-21.662,-22.263,-22.415,-23.329,-24.953,-25.329,-26.066,-26.066,-25.143,-25.061,-24.532,-24.849,-25.564,-25.71,-25.992,-26.745,-26.977,-26.79,-26.181,-26.499,-26.327,-26.815,-26.285,-25.608],[1.065,0.97,2.675,3.489,1.866,1.958,0.991,1.104,2.234,1.944,1.354,0.909,0.195,0.962,0.809,0.81,-0.554,-0.771,-2.74,-2.519,-3.775,-3.846,-2.716,-2.529,-3.612,-3.462,-3.681,-3.563,-4.793,-5.113,-5.552,-6.641,-6.874,-7.024,-7.463,-7.76,-6.79,-6.744,-7.492,-7.638,-8.713,-9.128,-9.49,-9.592,-8.573,-9.153,-9.354,-9.044,-8.627,-9.089,-9.307,-9.767,-9.742,-11.21,-11.661,-11.518,-12.323,-12.74,-13.97,-13.848,-14.058,-14.659,-14.998,-14.225,-13.115,-13.199,-14.036,-14.075,-14.703,-14.658,-13.471,-13.744,-14.136,-14.088,-14.571,-14.176,-15.013,-14.818,-15.048,-14.748,-15.831,-16.322,-17.931,-17.629,-17.605,-17.844,-19.849,-19.554,-21.523,-22.206,-22.645,-22.639,-22.75,-22.833,-23.165,-23.108,-24.665,-23.902,-24.341,-24.22,-24.048,-24.899,-25.243,-25.49,-25.723,-26.037,-27.697,-26.495,-28.104,-27.959,-28.24,-28.724,-27.117,-25.657,-25.127,-25.285,-24.37,-25.656,-26.446,-27.418,-26.644,-27.617,-26.647,-27.765,-28.554,-28.595,-28.349,-28.947],[1.103,1.103,-0.469,-1.396,-1.15,-3.15,-2.732,-3.142,-2.219,-2.526,-2.756,-2.563,-4.172,-4.177,-4.458,-4.524,-4.875,-5.733,-5.155,-4.387,-4.579,-5.168,-4.638,-4.316,-5.546,-5.576,-6.276,-6.115,-7.082,-9.082,-10.312,-12.18,-12.985,-12.466,-13.256,-14.586,-15.286,-14.86,-16.829,-16.772,-16.924,-16.716,-16.891,-17.487,-16.973,-16.642,-17.231,-16.911,-17.626,-17.912,-19.063,-18.297,-18.659,-18.577,-19.414,-19.532,-20.322,-20.021,-20.353,-20.424,-19.502,-19.316,-19.994,-19.849,-20.095,-20.539,-19.569,-20.467,-20.829,-21.111,-21.9,-22.019,-22.3,-22.372,-23.086,-23.266,-24.094,-24.253,-23.282,-23.384,-24.744,-24.815,-25.045,-25.678,-27.151,-26.756,-25.833,-25.587,-25.949,-26.069,-26.299,-27.081,-26.453,-26.515,-25.592,-25.318,-25.669,-24.711,-23.581,-24.036,-23.412,-23.364,-24.44,-25.062,-25.263,-25.941,-25.018,-25.273,-25.705,-25.556,-25.091,-24.781,-23.858,-23.616,-25.276,-25.74,-24.77,-24.577,-24.718,-25.155,-24.351,-24.109,-24.534,-24.472,-25.277,-24.682,-25.765,-24.305],[-0.63,-1.118,-0.195,-0.082,0.841,0.941,-0.289,0.023,0.127,-0.171,0.961,1.104,0.665,0.44,1.017,1.714,2.14,2.277,2.806,3.001,1.771,1.933,2.09,2.835,3.462,2.784,2.154,2.511,2.536,2.807,1.68,1.764,3.371,1.869,1.893,1.381,0.305,-0.084,1.025,0.216,0.634,0.931,-0.299,-0.811,-1.006,-1.324,-0.715,-0.527,0.396,-0.227,-1.784,-1.002,-1.831,-2.411,-3.097,-2.324,-3.161,-3.535,-4.618,-5.615,-5.845,-5.547,-5.886,-6.182,-7.015,-8.398,-7.088,-6.837,-6.307,-6.457,-6.94,-7.574,-6.897,-7.6,-7.801,-7.701,-7.172,-6.99,-8.959,-9.095,-9.81,-10.026,-11.995,-12.366,-11.443,-10.943,-11.383,-11.383,-11.823,-11.775,-11.618,-11.914,-12.147,-12.035,-12.795,-13.112,-13.563,-13.616,-12.307,-12.337,-12.751,-13.255,-13.501,-12.804,-12.996,-13.0,-14.571,-14.428,-16.389,-16.969,-16.57,-16.47,-17.155,-16.33,-17.119,-17.112,-17.345,-16.648,-16.878,-17.474,-18.44,-18.872,-20.102,-20.784,-21.555,-21.217,-21.426,-22.325],[-0.053,-0.313,0.61,0.2,1.621,1.619,2.748,3.057,3.98,4.313,5.622,5.633,5.639,5.739,4.13,3.135,2.394,2.987,1.018,0.698,0.416,0.027,1.129,0.925,0.563,0.219,1.351,0.57,-1.054,-1.006,-1.72,-1.575,-1.551,-1.055,0.553,1.297,-0.063,-1.117,-0.54,-0.539,-0.749,-1.427,-1.709,-2.272,-3.1,-2.941,-1.655,-1.572,-2.323,-2.115,-2.856,-3.974,-4.811,-3.952,-5.561,-5.4,-6.476,-6.48,-7.019,-7.642,-8.725,-8.884,-9.074,-9.125,-9.556,-9.599,-10.963,-10.689,-10.881,-10.935,-12.086,-12.661,-12.943,-14.047,-15.175,-15.175,-15.965,-16.326,-17.21,-17.599,-16.629,-16.506,-17.26,-17.068,-18.298,-17.586,-17.009,-18.512,-19.301,-19.662,-19.085,-19.074,-19.788,-19.934,-21.407,-20.648,-20.023,-20.313,-22.282,-21.687,-22.436,-21.554,-22.268,-20.303,-19.381,-19.599,-18.517,-19.353,-18.224,-18.541,-19.901,-20.219,-21.055,-21.375,-21.605,-22.601,-22.543,-22.279,-22.561,-22.844,-23.062,-22.902,-23.738,-23.518,-24.0,-24.151,-24.601,-24.303],[0.627,1.39,0.94,1.0,-1.005,-1.163,-0.248,0.705,-0.918,-0.834,-1.236,-0.934,-2.594,-3.811,-4.564,-4.954,-6.525,-6.416,-5.887,-4.685,-5.915,-5.687,-6.942,-6.749,-7.24,-7.815,-8.652,-8.584,-9.891,-10.3,-11.129,-11.069,-13.54,-13.494,-14.248,-14.692,-16.3,-16.187,-15.61,-16.728,-18.092,-18.863,-19.058,-18.78,-17.678,-17.952,-18.689,-19.322,-20.578,-20.599,-21.427,-23.427,-23.223,-22.874,-23.236,-24.208,-24.54,-24.191,-24.929,-24.82,-24.402,-24.322,-24.511,-24.42,-24.793,-25.847,-25.318,-24.822,-23.803,-24.054,-24.768,-25.011,-25.385,-25.226,-24.73,-25.629,-26.466,-28.152,-29.459,-30.158,-30.52,-31.492,-31.866,-31.866,-30.757,-31.22,-30.691,-30.934,-30.516,-31.614,-31.976,-31.783,-32.524,-33.002,-33.756,-34.007,-35.63,-36.074,-36.226,-36.269,-37.058,-36.748,-36.966,-37.375,-38.003,-38.211,-38.429,-38.637,-39.656,-39.308,-39.938,-40.375,-41.09,-40.941,-42.197,-42.316,-42.677,-42.75,-41.685,-41.893,-42.045,-42.679,-42.15,-42.492,-42.066,-41.474,-42.557,-42.564],[0.529,0.379,-1.192,-1.093,-1.323,-1.424,-1.763,-1.593,-1.936,-2.391,-3.151,-1.821,-3.076,-2.767,-1.844,-2.096,-0.967,-0.966,-1.707,-2.825,-2.329,-2.114,-2.324,-1.161,-0.446,0.274,-0.515,-1.104,-2.334,-2.151,-3.406,-4.401,-4.793,-4.864,-5.278,-5.595,-6.558,-8.06,-7.138,-7.402,-7.197,-7.413,-8.173,-8.058,-7.136,-6.416,-6.955,-6.66,-7.493,-7.54,-7.346,-7.229,-8.38,-8.663,-10.316,-10.309,-10.671,-11.643,-12.126,-11.778,-13.341,-13.126,-13.488,-13.656,-14.394,-15.537,-16.164,-15.807,-15.229,-16.06,-15.145,-15.663,-16.411,-16.663,-17.813,-18.23,-18.512,-18.191,-18.929,-18.16,-17.665,-17.785,-16.653,-17.216,-17.498,-17.793,-18.471,-17.963,-18.929,-19.387,-20.125,-20.243,-20.605,-20.442,-21.525,-21.122,-20.206,-21.643,-20.534,-21.67,-22.424,-22.833,-22.415,-21.989,-23.598,-24.223,-24.505,-24.833,-24.407,-24.964,-26.091,-26.355,-27.964,-28.549,-28.829,-28.868,-28.339,-28.521,-27.419,-27.335,-28.944,-28.083,-28.713,-28.601,-29.015,-28.889,-29.519,-29.956],[-0.362,-0.738,-1.51,-1.279,-1.611,-2.191,-1.765,-2.17,-1.546,-2.371,-3.994,-3.599,-4.682,-4.494,-5.57,-5.29,-6.848,-6.571,-7.646,-7.404,-5.834,-6.952,-7.706,-8.024,-8.017,-8.484,-9.244,-9.672,-10.358,-10.291,-9.826,-10.406,-11.195,-10.98,-10.01,-11.128,-10.598,-10.451,-9.922,-9.166,-10.826,-10.677,-9.755,-10.072,-9.356,-9.203,-9.831,-9.075,-9.515,-9.673,-9.189,-9.285,-10.033,-10.038,-10.786,-11.175,-12.012,-12.114,-12.344,-12.344,-14.35,-15.816,-16.008,-16.707,-16.94,-18.94,-19.354,-19.003,-19.743,-19.47,-20.042,-20.281,-21.035,-21.079,-23.034,-23.31,-24.394,-24.504,-25.734,-25.589,-27.062,-27.065,-27.427,-27.734,-28.505,-28.29,-28.721,-28.318,-29.548,-29.668,-30.744,-30.733,-30.106,-29.914,-29.907,-29.857,-30.628,-30.993,-30.07,-28.741,-27.32,-26.512,-25.835,-26.241,-25.27,-25.172,-25.909,-25.956,-25.8,-26.117,-26.745,-26.684,-27.915,-27.754,-26.831,-27.419,-28.65,-28.193,-28.632,-27.302,-27.664,-27.716,-26.793,-28.302,-26.993,-27.201,-29.206,-31.09],[0.418,-1.18,-2.017,-2.848,-3.078,-3.751,-4.835,-5.112,-4.141,-4.72,-5.152,-5.094,-4.47,-4.39,-5.998,-5.546,-5.908,-5.644,-4.84,-4.776,-4.246,-5.728,-6.561,-7.46,-6.431,-6.43,-5.935,-6.088,-5.166,-5.316,-4.199,-3.78,-3.104,-2.335,-2.697,-3.016,-2.487,-2.777,-4.783,-5.08,-3.951,-3.242,-2.126,-2.688,-3.651,-3.914,-4.257,-5.184,-5.523,-7.026,-7.451,-7.552,-6.45,-6.763,-5.583,-6.51,-6.861,-5.583,-4.163,-4.824,-4.327,-4.26,-4.691,-3.974,-3.051,-4.039,-5.653,-5.755,-6.15,-6.174,-5.509,-5.452,-4.322,-5.093,-5.898,-6.894,-7.731,-8.54,-10.545,-10.618,-10.98,-10.742,-9.827,-10.125,-10.1,-10.734,-10.239,-10.668,-11.099,-11.128,-11.813,-12.281,-12.223,-12.294,-12.645,-13.229,-13.935,-14.175,-14.923,-16.521,-17.604,-17.456,-19.425,-19.307,-20.537,-20.345,-20.707,-21.025,-21.375,-21.078,-20.974,-21.635,-20.532,-21.232,-23.186,-23.596,-23.589,-24.272,-25.527,-24.616,-24.758,-25.064,-26.621,-26.936,-27.676,-27.562,-27.703,-27.558],[0.495,-0.356,-0.349,-0.802,-1.002,-0.305,0.303,-0.134,0.361,1.269,0.014,-0.155,0.768,-0.698,-1.375,-3.375,-5.33,-5.166,-5.528,-6.3,-7.015,-6.748,-6.253,-6.319,-7.549,-7.978,-8.37,-8.56,-9.297,-9.925,-9.431,-8.668,-9.428,-9.896,-10.633,-11.484,-11.897,-11.595,-12.31,-13.327,-12.797,-12.105,-13.765,-14.883,-16.441,-15.695,-17.304,-17.04,-18.123,-18.654,-18.236,-18.455,-19.292,-20.097,-21.404,-21.992,-23.223,-24.71,-25.123,-26.626,-27.253,-27.261,-26.338,-26.143,-27.226,-27.234,-26.808,-27.026,-27.786,-27.0,-28.23,-28.69,-28.899,-28.716,-29.129,-29.231,-29.431,-30.02,-31.096,-30.13,-30.411,-30.879,-31.962,-32.48,-33.563,-34.016,-34.467,-34.136,-35.366,-35.795,-36.028,-36.146,-35.519,-35.443,-36.276,-36.279,-35.357,-36.643,-35.541,-35.699,-35.908,-36.49,-36.929,-37.828,-38.267,-38.486,-38.199,-38.882,-38.464,-38.9,-39.6,-40.458,-39.329,-39.924,-41.885,-42.48,-41.557,-40.147,-39.224,-39.723,-40.874,-40.761,-40.084,-40.445,-39.769,-40.172,-40.799,-41.116],[-0.189,-0.028,-1.637,-2.081,-2.479,-3.157,-2.059,-1.373,-3.447,-4.047,-3.125,-3.223,-5.695,-6.394,-8.866,-8.957,-8.932,-9.685,-10.438,-10.295,-9.766,-11.452,-11.791,-12.452,-12.866,-12.604,-14.176,-14.198,-14.541,-15.35,-14.933,-14.73,-15.96,-16.237,-16.985,-17.36,-16.277,-16.09,-16.032,-15.217,-15.579,-16.551,-15.927,-16.371,-17.337,-16.578,-17.415,-17.272,-19.241,-19.399,-20.076,-20.293,-20.776,-21.748,-23.708,-24.544,-25.774,-25.932,-26.283,-26.095,-27.326,-27.084,-28.314,-28.997,-29.278,-29.05,-28.632,-28.582,-28.688,-28.759,-28.565,-27.363,-26.945,-26.038,-25.62,-26.201,-26.143,-25.936,-26.689,-27.661,-28.812,-29.249,-30.902,-31.334,-31.615,-32.175,-32.004,-31.656,-32.37,-32.731,-33.521,-32.782,-32.757,-31.347,-32.819,-33.146,-31.837,-31.92,-31.39,-30.435,-31.15,-31.634,-32.205,-33.201,-33.954,-34.764,-36.718,-37.505,-36.976,-38.574,-37.445,-36.672,-36.824,-36.778,-37.929,-40.148,-40.938,-40.86,-41.222,-40.703,-41.492,-40.753,-41.38,-41.262,-42.886,-43.784,-43.994,-43.229],[-1.255,-1.415,-1.766,-2.575,-2.926,-2.881,-2.463,-2.384,-3.534,-3.897,-4.651,-4.349,-4.177,-3.83,-4.667,-4.803,-5.012,-5.294,-4.877,-4.473,-4.899,-5.187,-4.471,-4.754,-5.384,-4.615,-4.977,-4.915,-5.196,-4.849,-4.677,-5.363,-6.195,-7.094,-7.445,-7.183,-6.688,-6.625,-7.454,-8.352,-9.659,-8.92,-9.121,-8.929,-9.718,-9.041,-9.795,-9.056,-8.884,-9.558,-10.813,-11.649,-12.011,-12.107,-11.184,-11.003,-11.831,-11.883,-11.858,-11.705,-12.935,-13.706,-14.333,-14.623,-15.638,-15.958,-15.786,-15.946,-17.503,-17.506,-17.041,-17.065,-17.836,-17.641,-15.936,-16.569,-16.961,-17.934,-18.216,-18.805,-19.236,-18.64,-18.111,-17.849,-16.746,-16.539,-17.287,-17.285,-18.645,-18.36,-19.189,-19.887,-21.511,-20.797,-21.159,-20.853,-19.771,-19.515,-20.263,-21.584,-22.321,-22.384,-23.468,-23.28,-24.243,-24.182,-24.988,-25.419,-25.701,-24.942,-24.883,-24.815,-25.177,-25.313,-24.248,-24.692,-23.575,-23.414,-24.151,-25.274,-25.988,-27.205,-27.397,-27.182,-28.754,-28.708,-28.243,-28.125],[-1.96,-1.221,0.088,0.048,0.675,0.265,0.124,0.893,1.815,1.811,1.46,0.024,-1.931,-2.829,-1.859,-1.761,-1.343,-1.571,-3.54,-3.929,-4.303,-4.712,-3.609,-5.112,-5.945,-6.381,-6.713,-6.366,-7.974,-8.191,-6.77,-7.283,-7.179,-8.151,-9.235,-8.537,-7.615,-8.098,-8.524,-7.521,-8.259,-7.664,-8.294,-8.365,-9.516,-9.96,-10.793,-10.793,-10.264,-9.355,-10.72,-10.984,-11.732,-12.265,-13.625,-15.43,-16.79,-18.156,-18.909,-18.939,-20.023,-20.804,-20.098,-20.903,-22.858,-23.1,-22.997,-22.712,-23.104,-24.076,-25.091,-24.742,-26.711,-26.811,-27.56,-26.212,-24.902,-24.571,-24.766,-24.828,-24.804,-26.672,-25.542,-25.907,-26.059,-25.686,-26.117,-27.253,-28.09,-28.71,-29.464,-29.503,-30.579,-30.433,-29.856,-30.266,-31.228,-30.908,-31.538,-32.499,-32.729,-32.736,-33.364,-33.603,-33.409,-33.362,-34.115,-35.516,-35.948,-35.902,-36.617,-37.298,-38.958,-39.746,-41.7,-41.579,-41.002,-40.407,-41.49,-42.462,-41.933,-41.17,-42.007,-42.45,-42.602,-42.465,-43.302,-42.031],[-0.748,-0.898,-1.982,-1.73,-2.445,-3.216,-4.053,-3.295,-3.786,-4.06,-4.808,-5.245,-5.676,-6.113,-6.872,-6.577,-5.475,-6.055,-4.867,-5.488,-6.718,-8.227,-8.854,-9.537,-9.008,-8.963,-9.445,-9.81,-10.893,-10.941,-12.549,-12.282,-12.674,-12.565,-13.716,-13.862,-13.436,-13.048,-13.789,-13.636,-14.266,-14.268,-15.498,-15.353,-15.159,-15.968,-15.473,-15.526,-16.354,-16.871,-15.901,-16.427,-17.054,-18.604,-17.927,-17.325,-18.452,-18.326,-19.163,-19.12,-20.271,-21.043,-20.513,-20.36,-20.534,-19.735,-20.472,-21.052,-21.79,-21.093,-22.323,-22.759,-21.741,-21.42,-20.291,-20.746,-22.7,-23.09,-23.482,-23.485,-23.538,-23.309,-23.986,-23.639,-25.262,-26.399,-25.933,-25.75,-25.578,-24.119,-24.293,-23.859,-25.114,-26.401,-26.59,-27.034,-26.505,-26.154,-27.514,-28.915,-29.067,-30.753,-32.879,-33.571,-34.01,-34.635,-35.995,-35.904,-35.227,-35.592,-35.174,-35.983,-35.179,-35.663,-35.855,-35.991,-36.621,-37.32,-37.472,-37.641,-38.724,-39.506,-41.129,-41.377,-40.8,-41.699,-42.47,-42.208],[0.418,0.621,-1.002,0.962,1.932,2.646,2.215,1.614,1.183,0.738,0.626,0.843,-0.387,-0.777,-0.359,-0.633,-1.993,-2.232,-1.213,-1.531,-0.855,-0.705,-0.208,-0.96,-1.749,-2.056,-4.016,-4.471,-4.91,-4.848,-5.279,-5.282,-4.153,-3.877,-3.852,-4.937,-5.167,-5.62,-5.124,-4.773,-5.213,-5.649,-6.081,-5.935,-6.286,-6.576,-7.007,-7.641,-8.724,-7.966,-8.703,-9.676,-11.284,-11.535,-11.069,-11.341,-10.211,-9.443,-11.103,-11.165,-10.747,-10.829,-11.618,-11.983,-11.925,-12.093,-10.964,-11.769,-12.575,-12.272,-12.467,-12.468,-12.907,-13.351,-13.492,-13.929,-14.159,-14.319,-14.681,-14.018,-14.645,-13.954,-13.536,-14.323,-15.0,-15.46,-14.545,-15.14,-15.93,-15.9,-14.984,-14.792,-15.036,-15.473,-16.439,-15.72,-15.861,-16.226,-15.519,-15.372,-14.29,-14.253,-14.991,-15.571,-15.801,-15.609,-16.091,-15.978,-16.403,-17.081,-17.767,-18.21,-17.681,-17.963,-18.193,-18.304,-18.55,-18.809,-17.5,-17.566,-18.717,-19.302,-20.453,-19.714,-19.96,-19.876,-20.614,-19.917],[-0.362,-1.323,-0.193,0.21,1.319,1.544,1.392,1.676,1.734,1.325,0.362,0.248,-0.511,-1.017,-2.1,-2.998,-3.746,-3.747,-4.374,-5.856,-5.85,-5.849,-6.686,-6.836,-7.595,-7.776,-7.672,-8.116,-7.104,-6.792,-6.408,-6.782,-7.18,-7.263,-7.614,-7.854,-8.136,-8.237,-8.447,-7.62,-9.625,-10.309,-11.057,-11.658,-13.022,-13.158,-14.631,-15.917,-17.877,-17.692,-17.939,-18.348,-17.739,-16.94,-17.772,-19.619,-21.176,-21.502,-21.398,-21.773,-21.766,-21.837,-22.59,-22.662,-22.814,-22.593,-24.562,-24.285,-24.279,-24.154,-26.123,-26.059,-26.26,-26.068,-27.721,-27.784,-28.935,-28.836,-27.817,-27.699,-28.436,-28.797,-29.948,-30.795,-30.079,-30.163,-30.79,-30.648,-32.271,-31.894,-32.325,-31.628,-32.988,-32.896,-33.178,-32.986,-33.613,-34.023,-35.174,-35.983,-37.606,-38.105,-38.843,-38.913,-40.386,-40.121,-40.403,-39.577,-38.953,-39.584,-39.935,-39.659,-38.982,-39.616,-38.645,-37.9,-36.802,-37.098,-38.249,-38.135,-39.743,-39.057,-37.928,-38.056,-38.893,-39.33,-40.888,-40.714]],"step":2,"thr001":4.605170185988092,"thr0001":6.907755278982137},"proto":{"rollouts":128,"continuations":15360,"mean_rho":0.09758290219961166,"tau":[0.01,0.01],"exact_drift":[2.7755575615628914e-17,4.440892098500626e-16],"est_drift":[0.0008935198248136711,0.000791544862239979],"est_actual":[0.00019941414438425788,-0.00025095483155546106],"est_bound":[0.040000000000000036,0.025956328147615525],"imm_drift":[0.009103805232790974,0.005989258022647714],"unproj_drift":[0.1157858632511645,0.04509083592115226],"est_kl":0.0001930276949570008,"exact_kl":0.029666460874681604,"traj_kl":0.11850996321470007,"replay":{"ref":{"detections":3,"trials":100,"fraction":0.03,"exact_binomial_95_interval":[0.006229971538306393,0.08517605297428002]},"mark":{"detections":84,"trials":100,"fraction":0.84,"exact_binomial_95_interval":[0.7532124025891377,0.9056897100260538]}},"verify":{"alpha":0.01,"threshold":4.605170185988091,"log_evidence":4.746073170988467,"maximum_log_evidence":4.746073170988467,"decisions":247,"detected":true,"first_crossing":247,"recorded_decisions":256,"independent_requests":64,"deployed_policy":"exact_Q","snapshot_fingerprint":"32a66969c45145f999de8e5c48fc294a5b9e06f502703cbde5663e2c537f1856"},"dim":3.0,"policies":{"exact_Q":{"drift":[2.7755575615628914e-17,4.440892098500626e-16],"kl":0.029666460874681604,"tkl":0.11850996321470007,"bound":[1.778193107768901e-17,2.030380383973968e-16],"actual":[0.0,-8.881784197001253e-17]},"immediate_Q":{"drift":[0.009103805232790974,0.005989258022647714],"kl":0.029388520046072935,"tkl":0.11777773201519907,"bound":[0.00887725060138962,0.0046909728016139044],"actual":[0.0012375361333367475,0.0022588963528268557]},"unprojected":{"drift":[0.1157858632511645,0.04509083592115226],"kl":0.055246014759557725,"tkl":0.2166583484271387,"bound":[0.1596890099459793,0.08524886124168038],"actual":[0.05125269454587391,-0.004762672997186356]},"row_space":{"drift":[0.0,0.0],"kl":0.0,"tkl":0.0,"bound":[0.0,0.0],"actual":[0.0,0.0]},"random_feasible":{"drift":[1.1102230246251565e-16,4.440892098500626e-16],"kl":0.009187884188947469,"tkl":0.036789434512300156,"bound":[3.910998681322862e-17,1.8188507248552601e-16],"actual":[4.579669976578771e-17,8.881784197001253e-17]},"estimated_Q":{"drift":[0.0008935198248136711,0.000791544862239979],"kl":0.0001930276949570008,"tkl":0.0007713549701814735,"bound":[0.040000000000000036,0.025956328147615525],"actual":[0.00019941414438425788,-0.00025095483155546106]}},"compilation":{"scope":"in-sample mechanics check only","seeds":[{"initial_reference":[0.1597778736122191,3.4010136189029363],"initial_implemented":[0.15977782570845753,3.4010136296834403],"actual_initial_drift":[-4.790376159080623e-08,1.0780504133833803e-08],"signed_performance_difference":[-4.790376162844957e-08,1.0780503645592109e-08],"expected_error_bound":[1.0984019205264093e-07,4.309923179560721e-08],"max_prefix_drift":[1.0308918874796236e-07,3.824709970956519e-08],"maximum_local_charge":[7.102917870538406e-08,3.093752167643293e-08],"seed":0,"fit_kl":5.440092820663267e-14,"converged":true},{"initial_reference":[0.1597778736122191,3.4010136189029363],"initial_implemented":[0.15977785972234104,3.401013626416263],"actual_initial_drift":[-1.3889878053285898e-08,7.513326583108438e-09],"signed_performance_difference":[-1.3889878140243023e-08,7.51332622784822e-09],"expected_error_bound":[3.840057978920419e-08,2.6500800474690772e-08],"max_prefix_drift":[4.0413118157500705e-08,2.3460218878668115e-08],"maximum_local_charge":[4.041311811413262e-08,2.4431426232790487e-08],"seed":1,"fit_kl":1.7319479184152442e-14,"converged":true},{"initial_reference":[0.1597778736122191,3.4010136189029363],"initial_implemented":[0.15977787397924773,3.40101363766501],"actual_initial_drift":[3.670286102819273e-10,1.876207367246252e-08],"signed_performance_difference":[3.6702858510458295e-10,1.876207337033885e-08],"expected_error_bound":[4.202713535367923e-08,2.6768053632258653e-08],"max_prefix_drift":[2.515603264585664e-08,2.9405315071784344e-08],"maximum_local_charge":[2.515603260075383e-08,1.9818016328693178e-08],"seed":2,"fit_kl":1.0880185641326534e-14,"converged":true}]}}};
+</script>
+<script>
+/* ================= shared helpers ================= */
+var COL={ink:'#0b0b0b',ink2:'#52514e',muted:'#898781',grid:'#e1e0d9',base:'#c3c2b7',acc:'#2a78d6',deep:'#1c5cab',warm:'#eb6834',aqua:'#1baf7a',ref:'#b9b7ae',surf:'#fcfcfb',page:'#f9f9f7'};
+function isZh(){return document.body.classList.contains('lang-zh')}
+function L(en,zh){return isZh()?zh:en}
+var NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,s,o){o=o||{};var t=el('text',{x:x,y:y,'font-size':o.size||11,fill:o.fill||COL.ink2,'text-anchor':o.anchor||'start','font-weight':o.weight||400,'dominant-baseline':o.base||'auto'},parent);t.textContent=s;return t}
+var tip=document.getElementById('tip');
+function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;var x=ev.clientX+14,y=ev.clientY+14;var w=tip.offsetWidth,h=tip.offsetHeight;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y+h>innerHeight-8)y=ev.clientY-h-14;tip.style.left=x+'px';tip.style.top=y+'px'}
+function hideTip(){tip.style.opacity=0}
+function hover(node,fn){node.addEventListener('mousemove',function(e){showTip(e,fn())});node.addEventListener('mouseleave',hideTip);node.style.cursor='default'}
+function sci(v){if(v===0)return '0';var a=Math.abs(v);if(a<1e-3){var e=Math.floor(Math.log10(a));var m=v/Math.pow(10,e);return (Math.abs(m-1)<.05?'':m.toFixed(1)+'×')+'10<sup>'+e+'</sup>'}return v.toFixed(a<.1?4:3)}
+function sciTxt(v){if(v===0)return '0';var a=Math.abs(v);if(a<1e-3){var e=Math.floor(Math.log10(a));var m=v/Math.pow(10,e);return m.toFixed(1)+'e'+e}return v.toFixed(a<.1?4:3)}
+function pct(v,d){return (100*v).toFixed(d===undefined?1:d)+'%'}
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ================= exact exponential-tilt encoder (dual Newton) =================
+   maximize s'(q-p) - eta KL(q||p)  s.t.  sum q = 1,  q'c_j = p'c_j  for each protected row c_j
+   q_a ∝ p_a exp((s_a - λ'C_a)/eta); returns {q, dim, inert} */
+function encode(p,s,rows,eta){
+  var n=p.length,i,j,k;
+  var C=[];
+  rows.forEach(function(c){var m=0;for(i=0;i<n;i++)m+=p[i]*c[i];C.push(c.map(function(v){return v-m}))});
+  /* Gram-Schmidt for numerical rank (rows are already p-centred, hence independent of 1) */
+  var O=[];
+  C.forEach(function(c){var v=c.slice();O.forEach(function(o){var d=0;for(i=0;i<n;i++)d+=v[i]*o[i];for(i=0;i<n;i++)v[i]-=d*o[i]});var nr=Math.sqrt(v.reduce(function(a,b){return a+b*b},0));var sc=Math.sqrt(c.reduce(function(a,b){return a+b*b},0))||1;if(nr>1e-9*sc)O.push(v.map(function(x){return x/nr}))});
+  var r=O.length,dim=n-1-r;
+  if(dim<=0)return {q:p.slice(),dim:0,inert:true,why:'rank'};
+  /* Algorithm 1, line 9: a key in the row space of B (g = 0) returns p exactly */
+  var mean=function(v){return v.reduce(function(a,b){return a+b},0)/n};
+  var res=s.map(function(x){return x-mean(s)}),G=[];
+  O.forEach(function(o){var m=mean(o),v=o.map(function(x){return x-m});G.forEach(function(gg){var d=dot(v,gg);for(i=0;i<n;i++)v[i]-=d*gg[i]});var nv=Math.sqrt(dot(v,v));if(nv>1e-12){v=v.map(function(x){return x/nv});G.push(v);var d2=dot(res,v);for(i=0;i<n;i++)res[i]-=d2*v[i]}});
+  if(Math.sqrt(dot(res,res))<1e-10*(Math.sqrt(dot(s,s))||1))return {q:p.slice(),dim:dim,inert:true,why:'rowspace'};
+  var lam=new Array(r).fill(0);
+  function qOf(l){var z=[],mx=-1e300;for(i=0;i<n;i++){var a=s[i];for(k=0;k<r;k++)a-=l[k]*O[k][i];z.push(Math.log(p[i])+a/eta);if(z[i]>mx)mx=z[i]}var S=0;for(i=0;i<n;i++){z[i]=Math.exp(z[i]-mx);S+=z[i]}for(i=0;i<n;i++)z[i]/=S;return {q:z,lse:mx+Math.log(S)}}
+  function phi(l){return eta*qOf(l).lse}
+  for(var it=0;it<80;it++){
+    var Q=qOf(lam).q,g=[],Hm=[];
+    for(k=0;k<r;k++){var m=0;for(i=0;i<n;i++)m+=Q[i]*O[k][i];g.push(-m)} /* grad of phi: -C q (Cp = 0) */
+    var gn=Math.sqrt(g.reduce(function(a,b){return a+b*b},0));if(gn<1e-13)break;
+    var mu=[];for(k=0;k<r;k++){var m2=0;for(i=0;i<n;i++)m2+=Q[i]*O[k][i];mu.push(m2)}
+    for(k=0;k<r;k++){Hm.push([]);for(j=0;j<r;j++){var c2=0;for(i=0;i<n;i++)c2+=Q[i]*(O[k][i]-mu[k])*(O[j][i]-mu[j]);Hm[k].push(c2/eta+1e-14)}}
+    var d;
+    if(r===1)d=[g[0]/Hm[0][0]];
+    else{var det=Hm[0][0]*Hm[1][1]-Hm[0][1]*Hm[1][0];d=[(Hm[1][1]*g[0]-Hm[0][1]*g[1])/det,(-Hm[1][0]*g[0]+Hm[0][0]*g[1])/det]}
+    var f0=phi(lam),t=1,cand;
+    for(var bt=0;bt<40;bt++){cand=lam.map(function(v,kk){return v-t*d[kk]});if(phi(cand)<=f0-1e-4*t*(g[0]*d[0]+(r>1?g[1]*d[1]:0))||bt===39)break;t*=.5}
+    lam=cand;
+  }
+  var q=qOf(lam).q,dv=0;for(i=0;i<n;i++)dv=Math.max(dv,Math.abs(q[i]-p[i]));
+  return {q:q,dim:dim,inert:dv<1e-12,why:dv<1e-12?'rowspace':''};
+}
+function KL(q,p){var s=0;for(var i=0;i<q.length;i++)if(q[i]>0)s+=q[i]*Math.log(q[i]/p[i]);return Math.max(0,s)}
+function dot(a,b){var s=0;for(var i=0;i<a.length;i++)s+=a[i]*b[i];return s}
+function sub(a,b){return a.map(function(v,i){return v-b[i]})}
+
+/* ================= language ================= */
+(function(){
+  var b=document.getElementById('langBtn');
+  function set(zh){document.body.classList.toggle('lang-zh',zh);document.documentElement.lang=zh?'zh-CN':'en';b.textContent=zh?'EN':'中文';try{localStorage.setItem('rmLang',zh?'zh':'en')}catch(e){}document.dispatchEvent(new Event('langchange'))}
+  var init=false;try{init=localStorage.getItem('rmLang')==='zh'}catch(e){}
+  if(location.hash==='#zh')init=true;
+  set(init);
+  b.addEventListener('click',function(){set(!isZh())});
+})();
+
+/* ================= hero animation ================= */
+(function(){
+  var cv=document.getElementById('hero'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  var P=[.25,.25,.25,.25],Qk=[.30,.10,.40,.20];          /* p + 0.05 d, d=(1,-3,3,-1): U=0.70, C=1.50 for both */
+  var QU=[1,.8,.6,.4],QC=[1,2,2,1];
+  var NAMES=['Planner','Coder','Tool','Reviewer'],CC=['#1baf7a','#2a78d6','#4a3aa7','#eda100'];
+  var LR=Qk.map(function(v,i){return Math.log(v/P[i])});
+  var R=rng(7),seq=[];for(var i=0;i<140;i++){var u=R(),a=0,c=Qk[0];while(u>c&&a<3){a++;c+=Qk[a]}seq.push(a)}
+  var cum=[0];seq.forEach(function(a,i){cum.push(cum[i]+LR[a])});
+  var THR=Math.log(100);var cross=cum.findIndex(function(v){return v>=THR});
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+  function subT(a,b,x,y,sz,c){ctx.font='italic 600 '+sz+'px Georgia,serif';var w1=ctx.measureText(a).width;ctx.font='italic 600 '+(sz*.68)+'px Georgia,serif';var w2=b?ctx.measureText(b).width:0;var x0=x-(w1+w2)/2;ctx.fillStyle=c;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='italic 600 '+sz+'px Georgia,serif';ctx.fillText(a,x0,y);if(b){ctx.font='italic 600 '+(sz*.68)+'px Georgia,serif';ctx.fillText(b,x0+w1+1,y+sz*.25)}}
+  function T(s,x,y,o){o=o||{};ctx.font=(o.w||500)+' '+(o.s||20)+'px system-ui,-apple-system,"Noto Sans SC",sans-serif';ctx.fillStyle=o.c||COL.ink;ctx.textAlign=o.a||'left';ctx.textBaseline=o.b||'alphabetic';ctx.fillText(s,x,y)}
+  var t0=null,PERIOD=11000;
+  function ease(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)}
+  function frame(ts){
+    if(t0===null)t0=ts;var cyc=((ts-t0)%PERIOD)/PERIOD;
+    var m=ease((cyc-.12)/.22);           /* morph p -> qK */
+    var sP=Math.max(0,(cyc-.38)/.58);    /* sampling progress */
+    ctx.clearRect(0,0,W,H);
+    /* task card */
+    ctx.fillStyle=COL.surf;ctx.strokeStyle=COL.base;ctx.lineWidth=2;rr(40,170,210,120,14);ctx.fill();ctx.stroke();
+    T(L('user task','用户任务'),145,218,{a:'center',w:650,s:28});
+    T(L('reason · code · act','推理 · 代码 · 执行'),145,256,{a:'center',c:COL.muted,s:21});
+    ctx.strokeStyle=COL.base;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(254,230);ctx.lineTo(318,230);ctx.stroke();
+    ctx.fillStyle=COL.base;ctx.beginPath();ctx.moveTo(326,230);ctx.lineTo(312,222);ctx.lineTo(312,238);ctx.fill();
+    /* router */
+    var rx=390,ry=230;
+    ctx.fillStyle='rgba(42,120,214,.10)';ctx.beginPath();ctx.arc(rx,ry,62,0,7);ctx.fill();
+    ctx.strokeStyle=COL.acc;ctx.lineWidth=3;ctx.beginPath();ctx.arc(rx,ry,62,0,7);ctx.stroke();
+    T(L('router','路由器'),rx,ry+9,{a:'center',w:700,s:28,c:COL.deep});
+    subT(m>.5?'q':'p',m>.5?'K':'',rx,ry+106,24,COL.ink2);
+    /* delegates with edges ∝ prob */
+    var dx=760,ys=[78,178,282,386];
+    for(var k=0;k<4;k++){
+      var pr=P[k]*(1-m)+Qk[k]*m;
+      ctx.strokeStyle=(m>.02&&Qk[k]>P[k])?COL.acc:(m>.02&&Qk[k]<P[k]?'#9ec5f4':COL.base);
+      ctx.lineWidth=2+pr*34;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(rx+60,ry);ctx.bezierCurveTo(rx+170,ry,dx-150,ys[k],dx-44,ys[k]);ctx.stroke();
+      ctx.fillStyle=CC[k];rr(dx-36,ys[k]-30,72,56,12);ctx.fill();
+      T(NAMES[k],dx,ys[k]+54,{a:'center',s:19,c:COL.ink2});
+      /* prob bar */
+      var bx=dx+60,bw=150;ctx.fillStyle='#efeee9';rr(bx,ys[k]-11,bw,22,6);ctx.fill();
+      ctx.fillStyle=COL.ref;rr(bx,ys[k]-11,Math.max(4,bw*P[k]/.45),5,2);ctx.fill();
+      ctx.fillStyle=COL.acc;rr(bx,ys[k]-3,Math.max(6,bw*pr/.45),14,4);ctx.fill();
+      T(pr.toFixed(2),bx+bw+12,ys[k]+9,{s:24,w:650,c:COL.ink});
+    }
+    /* icons inside delegate boxes */
+    ctx.fillStyle='#fff';ctx.font='600 26px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ['P','</>','T','✓'].forEach(function(s,k){ctx.fillText(s,dx,ys[k]+1)});
+    /* value gauges */
+    var gx=1080;
+    function gauge(y,label,val,max,unit){
+      T(label,gx,y-14,{s:22,c:COL.ink2,w:600});
+      ctx.fillStyle='#efeee9';rr(gx,y,230,18,9);ctx.fill();
+      var v=val/max;ctx.fillStyle=COL.aqua;rr(gx,y,230*v,18,9);ctx.fill();
+      ctx.strokeStyle=COL.ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(gx+230*v,y-6);ctx.lineTo(gx+230*v,y+24);ctx.stroke();
+      T(unit,gx+244,y+18,{s:24,w:650});
+    }
+    var Ucur=dot(P.map(function(v,i){return v*(1-m)+Qk[i]*m}),QU),Ccur=dot(P.map(function(v,i){return v*(1-m)+Qk[i]*m}),QC);
+    gauge(120,L('expected utility','期望效用'),Ucur,1,Ucur.toFixed(2));
+    gauge(214,L('expected cost','期望成本'),Ccur,2,Ccur.toFixed(2));
+    ctx.fillStyle='rgba(27,175,122,.12)';rr(gx,262,180,42,10);ctx.fill();
+    T('ΔV = 0',gx+90,293,{a:'center',s:26,w:700,c:'#0a6b47'});
+    /* evidence meter */
+    var ex=1430,eh=300,ey=80;
+    var nS=Math.floor(sP*120),Lv=cum[Math.min(nS,cum.length-1)];
+    T(L('evidence','证据'),ex+60,ey-24,{a:'center',s:22,w:600,c:COL.ink2});
+    ctx.fillStyle='#efeee9';rr(ex+30,ey,60,eh,10);ctx.fill();
+    var lvMax=7,fh=Math.max(0,Math.min(1,Lv/lvMax))*eh;
+    ctx.fillStyle=Lv>=THR?COL.deep:COL.acc;rr(ex+30,ey+eh-fh,60,Math.max(0,fh),10);ctx.fill();
+    var ty=ey+eh-THR/lvMax*eh;ctx.strokeStyle=COL.warm;ctx.lineWidth=2.5;ctx.setLineDash([10,7]);ctx.beginPath();ctx.moveTo(ex+14,ty);ctx.lineTo(ex+106,ty);ctx.stroke();ctx.setLineDash([]);
+    T('log 1/α',ex+112,ty+7,{s:21,c:COL.ink2});
+    T(nS+' '+L('delegations','次委派'),ex+60,ey+eh+36,{a:'center',s:21,c:COL.ink2});
+    if(Lv>=THR){T(L('signature detected','检出签名'),ex+60,ey+eh+68,{a:'center',s:23,w:700,c:COL.deep})}
+    /* trace chips */
+    var shown=Math.min(nS,11);for(var c2=0;c2<shown;c2++){var a2=seq[nS-shown+c2];ctx.fillStyle=CC[a2];rr(1080+c2*28,352,22,22,5);ctx.fill()}
+    T(L('sampled delegations','采样到的委派'),1080,408,{s:20,c:COL.ink2});
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ================= routing lab ================= */
+(function(){
+  var NAMES=['Planner','Coder','Tool','Reviewer','Critic','Verifier','Searcher','Synth'];
+  var NAMESZ=['规划','编码','工具','审阅','批评','验证','检索','汇总'];
+  var R=rng(20260923),base=[],rU=[],wU=[],rC=[],wC=[];
+  for(var i=0;i<8;i++){base.push(.55+R());rU.push(.05+.2*R());wU.push(.2+.6*R());rC.push(.3+.7*R());wC.push(.5+2*R())}
+  var keySeed=1,st={n:6,U:true,C:true,imm:false,eta:1.5};
+  var $=function(id){return document.getElementById(id)};
+  function etaOf(v){return 1.5*Math.pow(10,0.8*(v-50)/50)} /* 0.24 .. 9.5, 1.5 at centre */
+  function keyScores(n){var r2=rng(9001+keySeed*7919),s=[];for(var i=0;i<n;i++)s.push(2*r2()-1);return s}
+  var cur=null;
+  function compute(){
+    var n=st.n,p=base.slice(0,n),S=p.reduce(function(a,b){return a+b},0);p=p.map(function(v){return v/S});
+    var QU=rU.slice(0,n).map(function(v,i){return v+wU[i]}),QC=rC.slice(0,n).map(function(v,i){return v+wC[i]});
+    var rows=[];if(st.U)rows.push(st.imm?rU.slice(0,n):QU);if(st.C)rows.push(st.imm?rC.slice(0,n):QC);
+    var s=keyScores(n),res=encode(p,s,rows,st.eta),q=res.q,d=sub(q,p);
+    cur={n:n,p:p,q:q,s:s,dim:res.dim,inert:res.inert,why:res.why,dU:dot(d,QU),dC:dot(d,QC),kl:KL(q,p),gain:dot(s,d)};
+    runVerifier();draw();
+  }
+  function runVerifier(){
+    var p=cur.p,q=cur.q,lr=q.map(function(v,i){return Math.log(v/p[i])}),T=300,thr=Math.log(100);
+    var r2=rng(4242+keySeed);
+    function draw1(prob){var u=r2(),a=0,c=prob[0];while(u>c&&a<prob.length-1){a++;c+=prob[a]}return a}
+    function run(prob,keep){var Lc=0,mx=0,path=[0],hit=-1;for(var t=0;t<T;t++){Lc+=lr[draw1(prob)];if(Lc>mx)mx=Lc;if(hit<0&&Lc>=thr)hit=t+1;if(keep&&t%2===1)path.push(Lc)}return {mx:mx,hit:hit,path:path}}
+    var mk=[],nl=[],tp=0,fp=0,hits=[];
+    for(var k=0;k<400;k++){var a=run(q,k<16),b=run(p,k<16);if(a.mx>=thr){tp++;hits.push(a.hit)}if(b.mx>=thr)fp++;if(k<16){mk.push(a.path);nl.push(b.path)}}
+    hits.sort(function(x,y){return x-y});
+    cur.sim={mk:mk,nl:nl,tpr:tp/400,fpr:fp/400,med:hits.length>200?hits[Math.floor(hits.length/2)]:null,thr:thr,T:T};
+  }
+  function draw(){
+    var svg=$('labBars');svg.innerHTML='';var n=cur.n,W=440,H=250,l=36,r=6,t=12,b=58;
+    var mx=Math.ceil(Math.max.apply(null,cur.p.concat(cur.q))*1.15/.05)*.05;
+    var y=function(v){return t+(H-t-b)*(1-v/mx)};
+    for(var g=0;g<=mx+1e-9;g+=(mx>.3?.1:.05)){el('line',{x1:l,x2:W-r,y1:y(g),y2:y(g),stroke:COL.grid,'stroke-width':1},svg);txt(svg,l-6,y(g)+4,g.toFixed(mx>.3?1:2),{anchor:'end',size:11.5,fill:COL.muted})}
+    var band=(W-l-r)/n,bw=Math.min(22,band*.3);
+    for(var i=0;i<n;i++){
+      var cx=l+band*(i+.5);
+      [[cur.p[i],COL.ref,-1],[cur.q[i],COL.acc,1]].forEach(function(o){var x=cx+(o[2]<0?-bw-1:1),h=y(0)-y(o[0]);var pth='M'+x+','+y(0)+'V'+(y(o[0])+Math.min(4,h))+'q0,-4 4,-4h'+(bw-8)+'q4,0 4,4V'+y(0)+'Z';if(h<4)pth='M'+x+','+y(0)+'h'+bw+'v'+(-h)+'h'+(-bw)+'Z';el('path',{d:pth,fill:o[1]},svg)});
+      var hit=el('rect',{x:cx-band/2,y:t,width:band,height:H-t-b+40,fill:'transparent'},svg);
+      (function(i){hover(hit,function(){return '<b>'+(isZh()?NAMESZ[i]:NAMES[i])+'</b><br>p = '+cur.p[i].toFixed(4)+'<br>q<sub>K</sub> = '+cur.q[i].toFixed(4)+' ('+(cur.q[i]>=cur.p[i]?'+':'')+(cur.q[i]-cur.p[i]).toFixed(4)+')<br>'+L('key score','密钥得分')+' s = '+cur.s[i].toFixed(3)})})(i);
+      /* key tick */
+      var ky=y(0)+24,kh=cur.s[i]*15;el('rect',{x:cx-5,y:Math.min(ky,ky-kh),width:10,height:Math.max(1.5,Math.abs(kh)),rx:2,fill:COL.warm},svg);
+      txt(svg,cx,H-8,isZh()?NAMESZ[i]:NAMES[i],{anchor:'middle',size:12,fill:COL.ink2});
+    }
+    el('line',{x1:l,x2:W-r,y1:y(0),y2:y(0),stroke:COL.base,'stroke-width':1},svg);
+    el('line',{x1:l,x2:W-r,y1:y(0)+24,y2:y(0)+24,stroke:COL.grid,'stroke-width':1},svg);
+    var sl=txt(svg,l-6,y(0)+28,'',{anchor:'end',size:11.5,fill:COL.muted});sl.innerHTML='s<tspan dy="3" font-size="8">K</tspan>';
+    $('roDim').textContent=cur.dim;
+    $('roU').innerHTML=sci(cur.dU);$('roC').innerHTML=sci(cur.dC);
+    $('roKL').innerHTML=cur.kl<1e-12?'0':cur.kl.toFixed(4);$('roG').innerHTML=Math.abs(cur.gain)<1e-12?'0':cur.gain.toFixed(4);
+    var stt=$('labStatus');
+    if(cur.dim===0){stt.className='status idle';stt.innerHTML=L('No value-preserving direction: '+cur.n+' delegations against '+(1+(st.U?1:0)+(st.C?1:0))+' independent constraints. RouterMAS abstains and returns the reference router unchanged.','没有保持价值的方向：'+cur.n+' 个委派对应 '+(1+(st.U?1:0)+(st.C?1:0))+' 个独立约束。RouterMAS 放弃加水印，原样返回参考路由器。')}
+    else if(st.imm&&(st.U||st.C)&&(Math.abs(cur.dU)>1e-6||Math.abs(cur.dC)>1e-6)){stt.className='status warn';stt.innerHTML=L('Immediate rewards are matched, but continuation values drift: the carrier must be built from Q, not from the first step.','即时奖励匹配上了，但后续价值发生漂移：载体必须由 Q 构造，而不能只看第一步。')}
+    else if(!st.U&&!st.C){stt.className='status warn';stt.innerHTML=L('Nothing is protected: the key tilts freely and both continuation values move.','没有任何受保护量：密钥自由倾斜，两个后续价值都会变动。')}
+    else if(!st.U||!st.C){stt.className='status warn';stt.innerHTML=L('Only one return is protected; the other drifts. Add it back to conserve both.','只保护了一个回报，另一个发生漂移。把它加回来即可同时守恒。')}
+    else{stt.className='status';stt.innerHTML=L('Both continuation values conserved to machine precision while probability moves inside a '+cur.dim+'-dimensional family.','两个后续价值守恒到机器精度，同时概率在 '+cur.dim+' 维可行族内移动。')}
+    /* evidence */
+    var sv=$('labEv');sv.innerHTML='';var Wv=380,Hv=250,lv=30,rv=8,tv=12,bv=32,sim=cur.sim;
+    var ymax=Math.max(8,sim.thr*1.5),ymin=-4;
+    var X=function(k){return lv+(Wv-lv-rv)*k/sim.T},Y=function(v){return tv+(Hv-tv-bv)*(ymax-Math.max(ymin,Math.min(ymax,v)))/(ymax-ymin)};
+    for(var g2=Math.ceil(ymin/2)*2;g2<=ymax;g2+=2){el('line',{x1:lv,x2:Wv-rv,y1:Y(g2),y2:Y(g2),stroke:g2===0?COL.base:COL.grid,'stroke-width':1},sv);txt(sv,lv-6,Y(g2)+4,g2,{anchor:'end',size:11.5,fill:COL.muted})}
+    [0,100,200,300].forEach(function(k){txt(sv,X(k),Hv-12,k,{anchor:'middle',size:11.5,fill:COL.muted})});
+    txt(sv,(lv+Wv)/2,Hv-0.5,L('delegations audited','已审计委派数'),{anchor:'middle',size:11.5,fill:COL.ink2});
+    function path(arr){return arr.map(function(v,k){return (k?'L':'M')+X(2*k).toFixed(1)+','+Y(v).toFixed(1)}).join('')}
+    sim.nl.forEach(function(a){el('path',{d:path(a),fill:'none',stroke:COL.ref,'stroke-width':1.4,opacity:.8},sv)});
+    sim.mk.forEach(function(a){el('path',{d:path(a),fill:'none',stroke:COL.acc,'stroke-width':1.4,opacity:.75},sv)});
+    el('line',{x1:lv,x2:Wv-rv,y1:Y(sim.thr),y2:Y(sim.thr),stroke:COL.warm,'stroke-width':1.5},sv);
+    var tl=txt(sv,Wv-rv-2,Y(sim.thr)-5,'log(1/α) = '+sim.thr.toFixed(2),{anchor:'end',size:12,fill:COL.ink,weight:600});tl.setAttribute('stroke',COL.surf);tl.setAttribute('stroke-width','4');tl.setAttribute('paint-order','stroke');
+    var hz=el('rect',{x:lv,y:tv,width:Wv-lv-rv,height:Hv-tv-bv,fill:'transparent'},sv);
+    hover(hz,function(){return L('Each line is one verifier run. A run that touches the threshold is a detection; Ville bounds the reference runs that ever touch it by α.','每条线是一次验证运行。触及阈值即为检出；由 Ville 不等式，参考运行中曾触及阈值的比例不超过 α。')});
+    $('roTPR').textContent=pct(sim.tpr,0);$('roFPR').textContent=pct(sim.fpr,1);$('roMed').textContent=sim.med?sim.med:'> 300';
+  }
+  function setEta(){st.eta=etaOf(+$('labEta').value);$('labEtao').textContent=st.eta.toFixed(2)}
+  var to=null;function later(){clearTimeout(to);to=setTimeout(compute,30)}
+  $('labN').addEventListener('input',function(){st.n=+this.value;$('labNo').textContent=st.n;later()});
+  $('labU').addEventListener('change',function(){st.U=this.checked;later()});
+  $('labC').addEventListener('change',function(){st.C=this.checked;later()});
+  $('labCont').addEventListener('click',function(){st.imm=false;this.classList.add('on');$('labImm').classList.remove('on');later()});
+  $('labImm').addEventListener('click',function(){st.imm=true;this.classList.add('on');$('labCont').classList.remove('on');later()});
+  $('labEta').addEventListener('input',function(){setEta();later()});
+  $('labKey').addEventListener('click',function(){keySeed++;later()});
+  document.addEventListener('langchange',function(){if(cur)draw()});
+  setEta();compute();
+})();
+
+/* ================= results: tiles + charts ================= */
+(function(){
+  var mech={};RM.mech.forEach(function(m){mech[m.id]=m});
+  var ex=mech['Exact-Q constrained'],im=mech['Immediate-Q constrained'],un=mech['Unprojected bias'];
+  var d=RM.det,e=RM.eta,e0=e[0],eN=e[e.length-1];
+  function tiles(){
+    var html=[
+      ['<span class="en">Worst prefix value drift</span><span class="zh">最坏前缀价值漂移</span>','<span class="from">'+un.dU.toFixed(3)+' →</span> &lt;10<sup>−14</sup>',
+       '<span class="en">routing still moves: mean KL '+ex.kl.toFixed(3)+' nats per decision</span><span class="zh">路由仍在变：平均每次决策 KL '+ex.kl.toFixed(3)+' nats</span>',
+       '<span class="en">unprojected key bias → RouterMAS, utility and cost over all 20 histories</span><span class="zh">未投影密钥偏置 → RouterMAS，覆盖全部 20 个历史的效用与成本</span>',''],
+      ['<span class="en">Matching immediate rewards only</span><span class="zh">只匹配即时奖励</span>',im.dU.toFixed(4)+' <span class="from">/</span> '+im.dC.toFixed(4),
+       '<span class="en">downstream utility / cost drift</span><span class="zh">下游效用 / 成本漂移</span>',
+       '<span class="en">a weaker local condition holds, yet later values move</span><span class="zh">满足了更弱的局部条件，但之后的价值仍在变化</span>','neutral'],
+      ['<span class="en">Detection at α = 0.01</span><span class="zh">α = 0.01 时的检出率</span>','<span class="from">'+pct(d.mark001[0])+' →</span> '+pct(d.mark001[3],0),
+       '<span class="en">'+d.T[0]+' → '+d.T[3]+' audited decisions</span><span class="zh">'+d.T[0]+' → '+d.T[3]+' 次审计决策</span>',
+       '<span class="en">reference false-positive rate ≤ '+pct(Math.max.apply(null,d.null001),2)+' at every budget</span><span class="zh">各预算下参考误报率 ≤ '+pct(Math.max.apply(null,d.null001),2)+'</span>',''],
+      ['<span class="en">Embedding ↔ evidence coefficient</span><span class="zh">嵌入 ↔ 证据系数</span>','<span class="from">'+e0.info.toFixed(3)+' →</span> '+eN.info.toFixed(5),
+       '<span class="en">measured ÷ predicted evidence, η = '+e0.eta+' → '+eN.eta+'</span><span class="zh">实测/预测证据，η = '+e0.eta+' → '+eN.eta+'</span>',
+       '<span class="en">gain coefficient '+e0.gain.toFixed(3)+' → '+eN.gain.toFixed(5)+'; conservation residual &lt; 2×10<sup>−15</sup></span><span class="zh">增益系数 '+e0.gain.toFixed(3)+' → '+eN.gain.toFixed(5)+'；守恒残差 &lt; 2×10<sup>−15</sup></span>','']
+    ].map(function(r){return '<div class="tile"><div class="label">'+r[0]+'</div><div class="value">'+r[1]+'</div><div class="delta '+r[4]+'">'+r[2]+'</div><div class="basis">'+r[3]+'</div></div>'}).join('');
+    document.getElementById('tiles').innerHTML=html;
+    var s=RM.shrink;
+    document.getElementById('tilesNote').innerHTML='<span class="en">Inert by construction: a row-space key and a full-rank three-action system both return the reference law exactly (KL = 0). Halving the final update halves its score gain ('+s.mean_gain_ratio.toFixed(3)+') and quarters its evidence ('+s.mean_information_ratio.toFixed(4)+'), as Corollary 1 predicts. An independent categorical replay with 10<sup>6</sup> draws per history agrees with the exact KL within '+Math.abs(RM.replay.z_error).toFixed(2)+' standard errors.</span><span class="zh">按构造失效：行空间密钥与满秩三动作系统都精确返回参考法则（KL = 0）。把最终更新减半，得分增益减半（'+s.mean_gain_ratio.toFixed(3)+'），证据变为四分之一（'+s.mean_information_ratio.toFixed(4)+'），与推论 1 一致。每个历史 10<sup>6</sup> 次抽样的独立类别重放与精确 KL 相差 '+Math.abs(RM.replay.z_error).toFixed(2)+' 个标准误。</span>';
+  }
+  tiles();
+
+  /* (a) drift, log scale grouped horizontal bars */
+  function chDrift(){
+    var svg=document.getElementById('chDrift');svg.innerHTML='';var W=330,H=250,l=112,r=12,t=26,b=34;
+    var rows=[['Unprojected bias',L('Unprojected bias','未投影偏置')],['Immediate-Q constrained',L('Immediate-value','即时价值约束')],['Random feasible',L('Random feasible','随机可行方向')],['Exact-Q constrained','RouterMAS']];
+    var lo=-17,hi=0,X=function(v){var lv=Math.log10(Math.max(v,1e-17));return l+(W-l-r)*(lv-lo)/(hi-lo)};
+    [-16,-12,-8,-4,0].forEach(function(e){el('line',{x1:X(Math.pow(10,e)),x2:X(Math.pow(10,e)),y1:t,y2:H-b,stroke:COL.grid,'stroke-width':1},svg);var tt=txt(svg,X(Math.pow(10,e)),H-b+14,'',{anchor:'middle',size:11.5,fill:COL.muted});tt.innerHTML='10<tspan dy="-4" font-size="8">'+e+'</tspan>'});
+    txt(svg,(l+W-r)/2,H-4,L('max |ΔV| over histories','各历史上的最大 |ΔV|'),{anchor:'middle',size:11.5,fill:COL.ink2});
+    var band=(H-t-b)/rows.length,bh=Math.min(10,band*.28);
+    rows.forEach(function(rw,i){var m=mech[rw[0]],cy=t+band*(i+.5);
+      txt(svg,l-8,cy+4,rw[1],{anchor:'end',size:12,fill:i===3?COL.ink:COL.ink2,weight:i===3?650:400});
+      [[m.dU,COL.acc,-1,L('utility','效用')],[m.dC,COL.warm,1,L('cost','成本')]].forEach(function(o){
+        var y0=o[2]<0?cy-bh-1:cy+1,x1=X(o[0]);
+        el('rect',{x:l,y:y0,width:Math.max(2,x1-l),height:bh,rx:2,fill:o[1]},svg);
+        var hz=el('rect',{x:l,y:y0-2,width:W-l-r,height:bh+4,fill:'transparent'},svg);
+        hover(hz,function(){return '<b>'+rw[1]+'</b> · '+o[3]+'<br>max |ΔV| = '+sciTxt(o[0])});
+      });
+    });
+    el('line',{x1:l,x2:l,y1:t,y2:H-b,stroke:COL.base,'stroke-width':1},svg);
+    /* legend */
+    el('rect',{x:l,y:6,width:10,height:10,rx:2,fill:COL.acc},svg);txt(svg,l+14,15,L('utility','效用'),{size:11.5});
+    el('rect',{x:l+70,y:6,width:10,height:10,rx:2,fill:COL.warm},svg);txt(svg,l+84,15,L('cost','成本'),{size:11.5});
+  }
+  /* (b) detection lines */
+  function chDet(){
+    var svg=document.getElementById('chDet');svg.innerHTML='';var W=330,H=250,l=40,r=14,t=50,b=34;
+    var xs=d.T,X=function(T){return l+(W-l-r)*(Math.log2(T)-5)/3},Y=function(v){return t+(H-t-b)*(1-v)};
+    [0,.25,.5,.75,1].forEach(function(g){el('line',{x1:l,x2:W-r,y1:Y(g),y2:Y(g),stroke:g===0?COL.base:COL.grid,'stroke-width':1},svg);txt(svg,l-6,Y(g)+4,(g*100)+'%',{anchor:'end',size:11.5,fill:COL.muted})});
+    xs.forEach(function(T){txt(svg,X(T),H-b+14,T,{anchor:'middle',size:11.5,fill:COL.muted})});
+    txt(svg,(l+W-r)/2,H-4,L('audited decisions (log scale)','审计决策数（对数轴）'),{anchor:'middle',size:11.5,fill:COL.ink2});
+    var ser=[[d.mark001,COL.acc,L('marked, α=.01','带水印 α=.01')],[d.mark0001,COL.warm,L('marked, α=.001','带水印 α=.001')],[d.null001,COL.aqua,L('reference, α=.01','参考 α=.01')]];
+    ser.forEach(function(s){el('path',{d:s[0].map(function(v,i){return (i?'L':'M')+X(xs[i])+','+Y(v)}).join(''),fill:'none',stroke:s[1],'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'},svg);
+      s[0].forEach(function(v,i){el('circle',{cx:X(xs[i]),cy:Y(v),r:4,fill:s[1],stroke:COL.surf,'stroke-width':2},svg)})});
+    /* end labels (text in ink, marker carries identity) */
+    ser.forEach(function(s2,ii){var lx=l+(ii%2)*140,ly=8+Math.floor(ii/2)*17;el('line',{x1:lx,x2:lx+14,y1:ly+5,y2:ly+5,stroke:s2[1],'stroke-width':2},svg);el('circle',{cx:lx+7,cy:ly+5,r:3.5,fill:s2[1]},svg);txt(svg,lx+19,ly+9,s2[2],{size:11.5,fill:COL.ink2})});
+    xs.forEach(function(T,i){var hz=el('rect',{x:X(T)-14,y:t,width:28,height:H-t-b,fill:'transparent'},svg);
+      hover(hz,function(){return '<b>T = '+T+'</b><br>'+L('marked','带水印')+' α=.01: '+pct(d.mark001[i],2)+'<br>'+L('marked','带水印')+' α=.001: '+pct(d.mark0001[i],2)+'<br>'+L('reference','参考')+' α=.01: '+pct(d.null001[i],2)+'<br>'+L('reference','参考')+' α=.001: '+pct(d.null0001[i],2)})});
+  }
+  /* (c) eta sweep */
+  function chEta(){
+    var svg=document.getElementById('chEta');svg.innerHTML='';var W=330,H=250,l=44,r=14,t=34,b=34;
+    var X=function(v){return l+(W-l-r)*(Math.log2(v)-1)/7},lo=.94,Y=function(v){return t+(H-t-b)*(1-(v-lo)/(1-lo))};
+    [.94,.96,.98,1].forEach(function(g){el('line',{x1:l,x2:W-r,y1:Y(g),y2:Y(g),stroke:COL.grid,'stroke-width':1},svg);txt(svg,l-6,Y(g)+4,g.toFixed(2),{anchor:'end',size:11.5,fill:COL.muted})});
+    e.forEach(function(r2){if([2,8,32,128].indexOf(r2.eta)>=0||r2.eta===256)txt(svg,X(r2.eta),H-b+14,r2.eta,{anchor:'middle',size:11.5,fill:COL.muted})});
+    txt(svg,(l+W-r)/2,H-4,L('η (log scale)','η（对数轴）'),{anchor:'middle',size:11.5,fill:COL.ink2});
+    var ser=[['gain',COL.acc,L('keyed gain','密钥增益')],['info',COL.warm,L('log evidence','对数证据')]];
+    ser.forEach(function(s){el('path',{d:e.map(function(r2,i){return (i?'L':'M')+X(r2.eta)+','+Y(r2[s[0]])}).join(''),fill:'none',stroke:s[1],'stroke-width':2,'stroke-linejoin':'round'},svg);
+      e.forEach(function(r2){el('circle',{cx:X(r2.eta),cy:Y(r2[s[0]]),r:4,fill:s[1],stroke:COL.surf,'stroke-width':2},svg)})});
+    ser.forEach(function(s2,ii){var lx=l+ii*120,ly=8;el('line',{x1:lx,x2:lx+14,y1:ly+5,y2:ly+5,stroke:s2[1],'stroke-width':2},svg);el('circle',{cx:lx+7,cy:ly+5,r:3.5,fill:s2[1]},svg);txt(svg,lx+19,ly+9,s2[2],{size:11.5,fill:COL.ink2})});
+    e.forEach(function(r2){var hz=el('rect',{x:X(r2.eta)-12,y:t,width:24,height:H-t-b,fill:'transparent'},svg);
+      hover(hz,function(){return '<b>η = '+r2.eta+'</b><br>'+L('gain coefficient','增益系数')+': '+r2.gain.toFixed(6)+'<br>'+L('evidence coefficient','证据系数')+': '+r2.info.toFixed(6)+'<br>'+L('mean KL','平均 KL')+': '+sciTxt(r2.mkl)+' nats<br>'+L('max conservation residual','最大守恒残差')+': '+sciTxt(r2.resid)})});
+  }
+  function all(){tiles();chDrift();chDet();chEta()}
+  all();document.addEventListener('langchange',all);
+})();
+
+/* ================= worked examples ================= */
+(function(){
+  var c=RM.cases.richest,w=RM.witness;
+  function row(i){var dp=c.q[i]-c.p[i];return '<tr><td>a'+(i+1)+'</td><td>'+c.p[i].toFixed(3)+'</td><td>'+c.q[i].toFixed(3)+'</td><td class="'+(dp>=0?'pos':'neg')+'">'+(dp>=0?'+':'')+dp.toFixed(3)+'</td><td>'+c.QU[i].toFixed(3)+'</td><td>'+c.QC[i].toFixed(3)+'</td><td>'+(c.key[i]>=0?'+':'')+c.key[i].toFixed(2)+'</td></tr>'}
+  function vU(v,Q){return dot(v,Q)}
+  function build(){
+    var h='';
+    h+='<div class="case"><h3><span class="en">Freedom available</span><span class="zh">有可用自由度</span> · <span class="chip win">'+L('marked','已加水印')+'</span> · <code>t='+c.t+', state='+c.s+'</code></h3>';
+    h+='<p class="src">'+L('Six legal delegations, two protected returns and normalization leave a '+c.dim+'-dimensional family. The key moves up to '+c.maxdp.toFixed(3)+' probability per delegation.','六个合法委派，两个受保护回报加归一化约束，留下 '+c.dim+' 维可行族。密钥在单个委派上最多移动 '+c.maxdp.toFixed(3)+' 的概率。')+'</p>';
+    h+='<div class="tw"><table class="mini"><thead><tr><th>'+L('delegation','委派')+'</th><th>p</th><th>q<sub>K</sub></th><th>Δ</th><th>Q<sub>U</sub></th><th>Q<sub>C</sub></th><th>s<sub>K</sub></th></tr></thead><tbody>';
+    for(var i=0;i<c.p.length;i++)h+=row(i);
+    h+='<tr class="sum"><td>V</td><td colspan="3">'+L('','')+'</td><td>'+vU(c.p,c.QU).toFixed(4)+'</td><td>'+vU(c.p,c.QC).toFixed(4)+'</td><td></td></tr></tbody></table></div>';
+    h+='<div class="checks"><b>RouterMAS</b> ΔV<sub>U</sub> = '+sci(c.dU)+' · ΔV<sub>C</sub> = '+sci(c.dC)+' · KL = '+c.kl.toFixed(3)+' · '+L('key gain','密钥增益')+' = '+c.gain.toFixed(3)+'<br><b>'+L('Immediate-value law','即时价值法则')+'</b> ΔV<sub>U</sub> = '+(c.dU_imm>=0?'+':'')+c.dU_imm.toFixed(4)+' · ΔV<sub>C</sub> = '+(c.dC_imm>=0?'+':'')+c.dC_imm.toFixed(4)+'</div>';
+    h+='<p class="why">'+L('V is the reference expected value at this history, identical under q<sub>K</sub>. The immediate-value law conserves first-step rewards at the same history but changes what follows.','V 为该历史上参考法则的期望价值，换成 q<sub>K</sub> 后完全相同。即时价值法则守住了同一历史的第一步奖励，但改变了之后的执行。')+'</p></div>';
+    h+='<div class="case"><h3><span class="en">No usable direction</span><span class="zh">没有可用方向</span> · <span class="chip off">'+L('abstains','放弃加水印')+'</span></h3>';
+    h+='<p class="src">'+L('Two ways the carrier can vanish. Both are executed controls and both return the reference law exactly.','载体消失的两种方式。两者都是实际执行的对照，都精确返回参考法则。')+'</p>';
+    h+='<div class="tw"><table class="mini"><thead><tr><th>'+L('control','对照')+'</th><th>'+L('why it is inert','失效原因')+'</th><th>KL</th><th>max |Δq|</th></tr></thead><tbody>';
+    h+='<tr><td>'+L('Full-rank, 3 actions','满秩，3 个动作')+'</td><td style="text-align:left">'+L('3 delegations, normalization + 2 returns: rank B = 3','3 个委派，归一化 + 2 个回报：rank B = 3')+'</td><td>0</td><td>0</td></tr>';
+    h+='<tr><td>'+L('Row-space key','行空间密钥')+'</td><td style="text-align:left">s<sub>K</sub> = B<sup>⊤</sup>v '+L('is constant on every feasible law','在所有可行法则上为常数')+'</td><td>0</td><td>0</td></tr></tbody></table></div>';
+    h+='<p class="why" style="margin-top:12px"><b>'+L('Four-action witness (exact arithmetic).','四动作构造示例（精确算术）。')+'</b> p = (0.25, 0.25, 0.25, 0.25), Q<sub>U</sub> = (1, 0.8, 0.6, 0.4), Q<sub>C</sub> = (1, 2, 2, 1). '+L('The direction d = (1, −3, 3, −1) conserves normalization and both values, so','方向 d = (1, −3, 3, −1) 同时守恒归一化与两个价值，因此')+' q = p + 0.02d = ('+w.q.join(', ')+') '+L('keeps utility','保持效用')+' '+w.U_q.toFixed(2)+' '+L('and cost','与成本')+' '+w.C_q.toFixed(2)+', '+L('while the key s = (1, −1, 1, −1) gains','而密钥 s = (1, −1, 1, −1) 获得增益')+' '+w.gain.toFixed(2)+' '+L('at','，代价为')+' KL = '+w.kl.toFixed(5)+' nats.</p>';
+    h+='<p class="why">'+L('Abstention is part of the method: when the protected returns already determine the routing law, more estimation effort cannot create a carrier.','放弃加水印本身就是方法的一部分：当受保护回报已经确定了路由法则时，再多的估计投入也造不出载体。')+'</p></div>';
+    document.getElementById('cases').innerHTML=h;
+  }
+  build();document.addEventListener('langchange',build);
+})();
+
+/* ================= evidence thumbnails ================= */
+(function(){
+  document.querySelectorAll('canvas[data-mini]').forEach(function(cv){
+    var x=cv.getContext('2d'),W=cv.width,H=cv.height,k=cv.dataset.mini;
+    x.clearRect(0,0,W,H);
+    if(k==='laws'){
+      var m={};RM.mech.forEach(function(r){m[r.id]=r});
+      var rows=['Unprojected bias','Immediate-Q constrained','Random feasible','Exact-Q constrained'];
+      rows.forEach(function(id,i){var v=Math.max(m[id].dU,m[id].dC),w=(Math.log10(Math.max(v,1e-17))+17)/17*(W-60);x.fillStyle=i===3?COL.acc:'#9ec5f4';x.beginPath();x.roundRect(30,22+i*34,Math.max(6,w),18,5);x.fill()});
+    }else if(k==='traces'){
+      var T=RM.traces,mx=10,mn=-3;function Y(v){return H-14-(H-28)*(Math.max(mn,Math.min(mx,v))-mn)/(mx-mn)}
+      x.lineWidth=2;
+      T.null.slice(0,10).forEach(function(a){x.strokeStyle='rgba(137,135,129,.55)';x.beginPath();a.forEach(function(v,i){var px=20+(W-40)*i/(a.length-1);i?x.lineTo(px,Y(v)):x.moveTo(px,Y(v))});x.stroke()});
+      T.marked.slice(0,10).forEach(function(a){x.strokeStyle='rgba(42,120,214,.7)';x.beginPath();a.forEach(function(v,i){var px=20+(W-40)*i/(a.length-1);i?x.lineTo(px,Y(v)):x.moveTo(px,Y(v))});x.stroke()});
+      x.strokeStyle=COL.warm;x.lineWidth=2.5;x.beginPath();x.moveTo(20,Y(T.thr001));x.lineTo(W-20,Y(T.thr001));x.stroke();
+    }else{
+      var cx=W/2,cy=H/2+8;x.strokeStyle=COL.base;x.lineWidth=2.5;x.beginPath();x.moveTo(cx-150,cy+55);x.lineTo(cx+150,cy+55);x.lineTo(cx,cy-70);x.closePath();x.stroke();
+      x.fillStyle='rgba(42,120,214,.18)';x.beginPath();x.moveTo(cx-110,cy+30);x.lineTo(cx+120,cy-5);x.lineTo(cx+105,cy+20);x.lineTo(cx-95,cy+52);x.closePath();x.fill();
+      x.strokeStyle=COL.acc;x.lineWidth=3;x.beginPath();x.moveTo(cx-20,cy+18);x.lineTo(cx+55,cy+4);x.stroke();
+      x.fillStyle=COL.ink;x.beginPath();x.arc(cx-20,cy+18,7,0,7);x.fill();x.fillStyle=COL.acc;x.beginPath();x.arc(cx+55,cy+4,8,0,7);x.fill();
+    }
+  });
+})();
+</script>
+</body>
+</html>
