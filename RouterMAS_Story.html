@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="RouterMAS: the routing-freedom story, from a multi-agent router as an asset to the shared embedding–evidence geometry.">
-<title>RouterMAS｜The Routing-Freedom Story</title>
+<title>RouterMAS — The Routing-Freedom Story</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E%E2%9A%96%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#031015;--ink:#f3fbfb;--muted:#91aab0;--teal:#55d8d2;--sky:#8fd0ff;--blue:#78a9ff;--orange:#ff9f55;--red:#ff6875;--green:#74e2ae;--gold:#ffd166;--purple:#bda2ff;--card:#06161cf2;--line:#c3e5e51f}
@@ -59,7 +59,6 @@ body.nomath .card .math{display:none}
   <div class="controls">
     <button id="play" type="button" aria-pressed="false">▶ <span data-en="Play" data-zh="播放">Play</span></button>
     <button id="fx" type="button" aria-pressed="true" title="formula">ƒ</button>
-    <button id="lang" type="button">中</button>
     <a href="index.html" title="project page">⌂</a>
   </div>
 </div>
@@ -207,7 +206,7 @@ var CH=[
 var FLAT=[];CH.forEach(function(c,ci){c.steps.forEach(function(s,si){FLAT.push({c:ci,s:si,d:s})})});
 
 /* ======================= state & DOM ======================= */
-var lang='en';try{if(localStorage.getItem('rmLang')==='zh')lang='zh'}catch(e){}
+var lang='en';
 function T2(a){return lang==='zh'?a[1]:a[0]}
 var scroller=document.getElementById('scroller'),card=document.getElementById('card'),nav=document.getElementById('nav');
 FLAT.forEach(function(f,i){var d=document.createElement('div');d.className='stepsp';d.id='s'+i;if(f.s===0)d.setAttribute('data-ch',f.c);scroller.appendChild(d)});
@@ -216,7 +215,7 @@ CH.forEach(function(c,ci){var a=document.createElement('div');a.id='ch'+ci;a.sty
 var dots=[].slice.call(nav.children);
 function labels(){dots.forEach(function(d,i){d.setAttribute('data-label',lang==='zh'?CH[i].zh:CH[i].en)});
   document.querySelectorAll('[data-en]').forEach(function(e){e.innerHTML=e.getAttribute(lang==='zh'?'data-zh':'data-en')});
-  document.getElementById('lang').textContent=lang==='zh'?'EN':'中';document.documentElement.lang=lang==='zh'?'zh-CN':'en'}
+  document.documentElement.lang=lang==='zh'?'zh-CN':'en'}
 var active=-1;
 function renderCard(i){
   var f=FLAT[i],d=f.d,c=CH[f.c];
@@ -231,7 +230,7 @@ function renderCard(i){
 function setActive(i){if(i===active)return;var first=active<0;active=i;if(first){renderCard(i)}else{card.classList.add('fade');setTimeout(function(){if(active===i)renderCard(i);card.classList.remove('fade')},140)}dots.forEach(function(d,k){d.classList.toggle('active',k===FLAT[i].c)})}
 function stepTop(i){return document.getElementById('s'+i).offsetTop}
 function goStep(i){stopPlay();window.scrollTo({top:stepTop(i)+innerHeight*0.25,behavior:'smooth'})}
-document.getElementById('lang').addEventListener('click',function(){lang=lang==='zh'?'en':'zh';try{localStorage.setItem('rmLang',lang)}catch(e){}labels();renderCard(active)});
+
 document.getElementById('fx').addEventListener('click',function(){var on=document.body.classList.toggle('nomath');this.setAttribute('aria-pressed',on?'false':'true')});
 var playing=false,lastT=0;
 var playBtn=document.getElementById('play');

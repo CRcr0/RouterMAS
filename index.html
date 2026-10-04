@@ -213,7 +213,6 @@ footer a{color:var(--ink-2)}
       <a class="opt" href="#evidence"><span class="en">Evidence</span><span class="zh">证据</span></a>
       <a class="opt" href="#explore"><span class="en">Deep dive</span><span class="zh">深入</span></a>
       <a class="opt" href="#bibtex">BibTeX</a>
-      <button class="langbtn" id="langBtn" type="button" aria-label="Switch language">中文</button>
     </div>
   </div>
 </nav>
@@ -541,15 +540,8 @@ function KL(q,p){var s=0;for(var i=0;i<q.length;i++)if(q[i]>0)s+=q[i]*Math.log(q
 function dot(a,b){var s=0;for(var i=0;i<a.length;i++)s+=a[i]*b[i];return s}
 function sub(a,b){return a.map(function(v,i){return v-b[i]})}
 
-/* ================= language ================= */
-(function(){
-  var b=document.getElementById('langBtn');
-  function set(zh){document.body.classList.toggle('lang-zh',zh);document.documentElement.lang=zh?'zh-CN':'en';b.textContent=zh?'EN':'中文';try{localStorage.setItem('rmLang',zh?'zh':'en')}catch(e){}document.dispatchEvent(new Event('langchange'))}
-  var init=false;try{init=localStorage.getItem('rmLang')==='zh'}catch(e){}
-  if(location.hash==='#zh')init=true;
-  set(init);
-  b.addEventListener('click',function(){set(!isZh())});
-})();
+/* ================= language: English only ================= */
+(function(){document.body.classList.remove('lang-zh');document.documentElement.lang='en';document.dispatchEvent(new Event('langchange'))})();
 
 /* ================= hero animation ================= */
 (function(){
